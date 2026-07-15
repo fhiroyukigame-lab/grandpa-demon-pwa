@@ -29,11 +29,13 @@ const SKILLS=[
 ];
 const ENEMIES=[{name:'スライム',avatar:'🟢',hp:45,atk:8,def:1,spd:35,reward:30},{name:'ゴブリン',avatar:'👺',hp:75,atk:13,def:3,spd:42,reward:45},{name:'オーク',avatar:'🐗',hp:120,atk:19,def:6,spd:32,reward:65},{name:'骸骨騎士',avatar:'💀',hp:165,atk:26,def:10,spd:46,reward:90},{name:'魔導師',avatar:'🧙',hp:210,atk:34,def:8,spd:54,reward:120},{name:'ドラゴン',avatar:'🐉',hp:330,atk:47,def:15,spd:40,reward:180}];
 const DEFAULT_STATE={version:3,gold:300,level:1,maxFloor:0,selectedFloor:1,gears:[],equipped:{head:null,body:null,right:null,left:null},skills:{},equippedSkills:[]};
+function cloneDefaultState(){return JSON.parse(JSON.stringify(DEFAULT_STATE));}
 let state=migrate(load());let pendingGearId=null;let battle=null,battleTimer=null,cooldowns=[0,0,0];
 const $=s=>document.querySelector(s);const titleBgm=$('#titleBgm'),buttonSe=$('#buttonSe');
+window.addEventListener('error',e=>console.error('APP ERROR:',e.error||e.message));
 function uid(){return 'g'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function starter(slot,suffix,base,name){return {id:uid(),slot,suffix,base:{...base},bonus:{},level:0,name,locked:true}}
-function migrate(old){if(old&&old.version===3&&Array.isArray(old.gears))return {...DEFAULT_STATE,...old,equipped:{...DEFAULT_STATE.equipped,...old.equipped},skills:old.skills||{},equippedSkills:old.equippedSkills||[]};const s=structuredClone(DEFAULT_STATE);if(old){s.gold=old.gold??300;s.level=old.level??1;s.maxFloor=old.maxFloor??0;s.selectedFloor=old.selectedFloor??1;}const starters=[starter('right','ソード',{atk:8},'オールドソード'),starter('left','シールド',{def:5},'オールドシールド'),starter('body','チュニック',{hp:35},'オールドチュニック'),starter('head','フード',{hp:20},'オールドフード')];s.gears=starters;for(const g of starters)s.equipped[g.slot]=g.id;return s}
+function migrate(old){if(old&&old.version===3&&Array.isArray(old.gears))return {...DEFAULT_STATE,...old,equipped:{...DEFAULT_STATE.equipped,...old.equipped},skills:old.skills||{},equippedSkills:old.equippedSkills||[]};const s=cloneDefaultState();if(old){s.gold=old.gold??300;s.level=old.level??1;s.maxFloor=old.maxFloor??0;s.selectedFloor=old.selectedFloor??1;}const starters=[starter('right','ソード',{atk:8},'オールドソード'),starter('left','シールド',{def:5},'オールドシールド'),starter('body','チュニック',{hp:35},'オールドチュニック'),starter('head','フード',{hp:20},'オールドフード')];s.gears=starters;for(const g of starters)s.equipped[g.slot]=g.id;return s}
 function save(){localStorage.setItem('grandpaDemonSave',JSON.stringify(state))}function load(){try{return JSON.parse(localStorage.getItem('grandpaDemonSave'))}catch{return null}}
 function playSE(){try{buttonSe.currentTime=0;buttonSe.play().catch(()=>{})}catch{}}
 function gear(id){return state.gears.find(g=>g.id===id)}

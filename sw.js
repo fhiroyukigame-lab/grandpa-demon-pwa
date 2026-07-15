@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'grandpa-demon-v3';
+const CACHE_VERSION = 'grandpa-demon-v3.0.1-fix';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const APP_SHELL = [
   './',
