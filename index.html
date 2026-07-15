@@ -13,7 +13,18 @@
   <title>じいさん、魔王倒してきて。</title>
 </head>
 <body>
-  <main class="app">
+  <section id="titleScreen" class="title-screen">
+    <div class="title-sky"></div><div class="title-sun">☀️</div>
+    <div class="title-content"><div class="title-grandpa">🧙‍♂️</div><h1>じいさん、<br>魔王倒してきて。</h1><p>武器屋の店主、最後の大冒険。</p>
+      <button id="newGameBtn" class="title-btn">ニューゲーム</button>
+      <button id="continueBtn" class="title-btn">つづきから</button>
+      <small>※音楽はボタン操作後に再生されます</small>
+    </div>
+  </section>
+  <audio id="titleBgm" src="title-bgm.mp3" loop preload="auto"></audio>
+  <audio id="buttonSe" src="button-se.mp3" preload="auto"></audio>
+  <div id="sellModal" class="modal hidden"><div class="modal-box"><h3>売却しますか？</h3><p id="sellMessage"></p><div class="modal-actions"><button id="sellYes" class="primary">はい</button><button id="sellNo">いいえ</button></div></div></div>
+  <main id="gameApp" class="app hidden">
     <header class="topbar">
       <div>
         <h1>じいさん、魔王倒してきて。</h1>
@@ -23,7 +34,7 @@
     </header>
 
     <section class="hero card">
-      <div class="portrait">🧙‍♂️</div>
+      <div id="shopGrandpa" class="portrait layered-grandpa"></div>
       <div class="hero-info">
         <h2>武器屋のじいさん Lv.<span id="level">1</span></h2>
         <div class="statline"><span>HP</span><b id="hpStat"></b></div>
@@ -69,7 +80,7 @@
       <div id="battleArea" class="card battle-card hidden">
         <div class="fighters">
           <div class="fighter">
-            <div class="avatar">🧙‍♂️</div>
+            <div id="playerAvatar" class="avatar layered-grandpa battle-grandpa"></div>
             <b>じいさん</b>
             <div class="hpbar"><span id="playerHpBar"></span></div>
             <small id="playerHpText"></small>

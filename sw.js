@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'grandpa-demon-v2';
+const CACHE_VERSION = 'grandpa-demon-v3';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const APP_SHELL = [
   './',
@@ -7,7 +7,9 @@ const APP_SHELL = [
   './app.js',
   './manifest.webmanifest',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './title-bgm.mp3',
+  './button-se.mp3'
 ];
 
 self.addEventListener('install', event => {
