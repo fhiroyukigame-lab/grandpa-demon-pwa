@@ -36,3 +36,10 @@
 /* Ver.5.3 */
 .newgame-name-row{display:grid;grid-template-columns:1fr 1.25fr;gap:10px;align-items:stretch;margin:10px 0}.newgame-name-row .title-btn{margin:0;height:100%}.name-entry{display:grid;grid-template-columns:1fr auto;gap:6px}.name-entry input{min-width:0;width:100%;padding:12px 9px;border-radius:12px;border:1px solid #9b744b;background:#17120f;color:#fff;font-size:16px;text-align:center}.name-entry button{padding:8px;border-radius:12px;font-size:12px}.hero.shop-hero,.hero.forge-hero{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:170px;background:linear-gradient(180deg,#15100d,#090807)}.shop-face{font-size:86px;line-height:1;filter:drop-shadow(0 3px 5px #000)}
 @media(max-width:430px){.newgame-name-row{grid-template-columns:.9fr 1.35fr}.name-entry input{font-size:14px}.name-entry button{font-size:10px;padding:6px}}
+
+/* Ver.5.4 */
+.hero-face-only{font-size:78px!important;width:94px!important;height:94px!important;display:flex!important;align-items:center;justify-content:center}
+.hero-face-only::before{content:none!important}.hero-face-only .gear-layer{display:none!important}
+.gear-title-line{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}.gear-category{font-size:10px;color:#b7a99b;font-weight:700;white-space:nowrap}.equip-slot-actions{display:flex;align-items:center;justify-content:space-between;margin-top:7px}.slot-emoji{font-size:30px;line-height:1;filter:drop-shadow(0 2px 2px #000)}
+.forge-material-title{font-size:11px;color:#c0b2a4;margin-top:12px;margin-bottom:5px}.forge-material-list{display:grid;gap:6px;max-height:190px;overflow:auto}.forge-material-option{display:flex;align-items:center;gap:7px;padding:8px;background:#211a15;border:1px solid #3a2e24;border-radius:10px;font-size:12px}.forge-material-option input{accent-color:#b7742d}
+#battleHeroMount .hero{margin-top:14px}#battle .battle-card{order:1}#battle .floor-card{order:2}#battleHeroMount{order:3}#battle.panel.active{display:flex;flex-direction:column}.battle-card.hidden{display:none!important}
