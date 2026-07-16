@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'grandpa-demon-v4';
+const CACHE_VERSION = 'grandpa-demon-v5';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const APP_SHELL = [
   './',
@@ -13,7 +13,11 @@ const APP_SHELL = [
   './equip-button-se.mp3',
   './slot-button-se.mp3',
   './roulette-se.mp3',
-  './slot-result-se.mp3'
+  './slot-result-se.mp3',
+  './menu-bgm.mp3',
+  './battle-bgm.mp3',
+  './forge-bgm.mp3',
+  './hit-se.mp3'
 ];
 
 self.addEventListener('install', event => {
