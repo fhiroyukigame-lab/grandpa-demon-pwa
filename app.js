@@ -71,3 +71,85 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.t
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.matches('[data-equip]')||b.id==='gearGacha')return;playSE()});
 if('serviceWorker'in navigator){let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;location.reload()});window.addEventListener('load',async()=>{try{const r=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});if(r.waiting)r.waiting.postMessage({type:'SKIP_WAITING'});r.addEventListener('updatefound',()=>{const w=r.installing;if(w)w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)w.postMessage({type:'SKIP_WAITING'})})})}catch(e){console.warn(e)}})}
 showTitle();
+
+/* ===== Ver.5.2: detailed breakdowns, status help, skills window, scene transitions ===== */
+const STAT_LABELS_V52={hp:'HP',atk:'攻撃',def:'防御',spd:'速度',crit:'会心',eva:'回避',lifesteal:'HP吸収'};
+function fmtStatV52(k,v){
+  if(k==='lifesteal') return `${v>=0?'+':''}${Math.round(v*100)}%`;
+  if(k==='crit'||k==='eva') return `${v>=0?'+':''}${v}%`;
+  return `${v>=0?'+':''}${v}`;
+}
+function objectStatLinesV52(obj){
+  return Object.keys(STAT_LABELS_V52).filter(k=>obj&&obj[k]).map(k=>`${STAT_LABELS_V52[k]} ${fmtStatV52(k,obj[k])}`);
+}
+function nameBonusForGearV52(g){
+  const out={};
+  const labels=new Set(g.effects||[]);
+  [...ADJECTIVES,...ABSTRACT_NOUNS].forEach(x=>{if(labels.has(x[2]))addBonus(out,x[1])});
+  return out;
+}
+function residualBonusV52(g,nameBonus){
+  const out={};
+  Object.keys(g.bonus||{}).forEach(k=>{const v=(g.bonus[k]||0)-(nameBonus[k]||0);if(Math.abs(v)>1e-9)out[k]=v});
+  return out;
+}
+function totalGearStatsV52(g){const out={};addBonus(out,g.base||{});addBonus(out,g.bonus||{});return out}
+function showGearBreakdownV52(id){
+  const g=gear(id);if(!g)return;
+  const named=nameBonusForGearV52(g),other=residualBonusV52(g,named),total=totalGearStatsV52(g);
+  const effectNames=(g.effects||[]).length?(g.effects||[]).map(x=>`<div>${x}</div>`).join(''):'<div>名称による追加効果なし</div>';
+  const baseLines=objectStatLinesV52(g.base).join(' / ')||'なし';
+  const otherLines=objectStatLinesV52(other).join(' / ')||'なし';
+  const totalLines=objectStatLinesV52(total).join(' / ')||'能力なし';
+  $('#detailTitle').textContent=g.name+' の内訳';
+  $('#detailContent').innerHTML=`
+    <div class="detail-section"><b>装備の名称による詳細効果</b>${effectNames}</div>
+    <div class="detail-section"><b>装備品の基礎効果</b><div>${baseLines}</div></div>
+    <div class="detail-section"><b>その他の効果（鍛冶場強化・継承など）</b><div>${otherLines}</div></div>
+    <div class="detail-section detail-total"><b>ステータス合計</b><div>${totalLines}</div></div>`;
+  $('#detailModal').classList.remove('hidden');
+}
+function playerBreakdownV52(){
+  const base={hp:120+state.level*8,atk:10+state.level*2,def:4+state.level,spd:50,crit:5,eva:3,lifesteal:0};
+  const gearParts=[];const total=stats();
+  Object.keys(SLOT_LABEL).forEach(slot=>{const g=gear(state.equipped[slot]);if(g)gearParts.push({slot,name:g.name,stats:totalGearStatsV52(g)})});
+  return {base,gearParts,total};
+}
+function showStatusDetailV52(){
+  const b=playerBreakdownV52();
+  let html=`<div class="detail-section"><b>じいさん自身の基礎ステータス（Lv.${state.level}）</b><div>${objectStatLinesV52(b.base).join(' / ')}</div></div>`;
+  b.gearParts.forEach(x=>{html+=`<div class="detail-section"><b>${SLOT_LABEL[x.slot]}：${x.name}</b><div>${objectStatLinesV52(x.stats).join(' / ')||'補正なし'}</div></div>`});
+  html+=`<div class="detail-section detail-total"><b>現在の最終ステータス合計</b><div>${objectStatLinesV52(b.total).join(' / ')}</div></div>`;
+  $('#detailTitle').textContent='じいさんのステータス詳細';$('#detailContent').innerHTML=html;$('#detailModal').classList.remove('hidden');
+}
+function showLearnedSkillsV52(){
+  const entries=Object.entries(state.skills||{});
+  $('#learnedSkillsContent').innerHTML=entries.length?entries.map(([name,lv])=>{const sk=SKILLS.find(s=>s.name===name);const equipped=state.equippedSkills.includes(name)?'（装備中）':'';return `<div class="skill-modal-row"><b>${name} Lv.${lv} ${equipped}</b><div class="item-meta">${sk?sk.desc:'パッシブスキル'}</div></div>`}).join(''):'まだスキルを習得していません。';
+  $('#skillsModal').classList.remove('hidden');
+}
+function bindHeroButtonsV52(){
+  const d=$('#statusDetailBtn'),h=$('#statusHelpBtn'),s=$('#learnedSkillsBtn');
+  if(d)d.onclick=showStatusDetailV52;if(h)h.onclick=()=>$('#helpModal').classList.remove('hidden');if(s)s.onclick=showLearnedSkillsV52;
+}
+function render(){
+  const s=stats();$('#gold').textContent=state.gold;$('#level').textContent=state.level;$('#hpStat').textContent=s.hp;$('#atkStat').textContent=s.atk;$('#defStat').textContent=s.def;$('#spdStat').textContent=s.spd;$('#critStat').textContent=s.crit+'%';$('#evaStat').textContent=s.eva+'%';if($('#lifestealStat'))$('#lifestealStat').textContent=Math.round((s.lifesteal||0)*100)+'%';$('#maxFloor').textContent=state.maxFloor;$('#selectedFloor').textContent=state.selectedFloor;renderGrandpa($('#shopGrandpa'));renderGrandpa($('#playerAvatar'));renderEquip();renderForge();renderSkills();bindHeroButtonsV52();save()
+}
+function renderEquip(){
+  const slots=$('#equipSlots');slots.innerHTML='';Object.keys(SLOT_LABEL).forEach(slot=>{const g=gear(state.equipped[slot]);slots.insertAdjacentHTML('beforeend',`<div class="equip-slot"><div class="slot-label">${SLOT_LABEL[slot]}</div><div class="slot-name">${g?g.name:'なし'}</div><div class="item-meta">${g?statSummary(g):''}</div>${g?`<button class="breakdown-btn" data-breakdown="${g.id}">内訳</button>`:''}</div>`)});
+  const inv=$('#inventory');inv.innerHTML='';state.gears.forEach(g=>{const row=document.createElement('div');row.className='gear-card compact-gear';const equipped=state.equipped[g.slot]===g.id;row.innerHTML=`<div class="gear-row compact-row"><div class="gear-info"><b>${g.name}</b><div class="item-meta">${SLOT_LABEL[g.slot]}｜強化+${g.level}｜${statSummary(g)}</div><div class="gear-actions"><button class="breakdown-btn" data-breakdown="${g.id}">内訳</button></div></div><div class="gear-actions compact-actions"><button data-equip class="${equipped?'equipped-btn':''}" ${equipped?'disabled':''}>${equipped?'装備中':'装備'}</button></div></div>`;const eb=row.querySelector('[data-equip]');eb.onclick=()=>{if(equipped)return;playEquipSE();state.equipped[g.slot]=g.id;render()};inv.appendChild(row)});
+  document.querySelectorAll('[data-breakdown]').forEach(b=>b.onclick=()=>showGearBreakdownV52(b.dataset.breakdown));
+}
+function normalHeroHtmlV52(){return '<div id="shopGrandpa" class="portrait layered-grandpa"></div><div class="hero-info"><h2>武器屋のじいさん Lv.<span id="level">1</span></h2><div class="statline"><span>HP</span><b id="hpStat"></b></div><div class="statline"><span>攻撃</span><b id="atkStat"></b></div><div class="statline"><span>防御</span><b id="defStat"></b></div><div class="statline"><span>速度</span><b id="spdStat"></b></div><div class="statline"><span>会心</span><b id="critStat"></b></div><div class="statline"><span>回避</span><b id="evaStat"></b></div><div class="statline"><span>HP吸収</span><b id="lifestealStat"></b></div><button id="statusDetailBtn" class="mini-wide">ステータス詳細</button><button id="statusHelpBtn" class="mini-wide">ヘルプ</button><button id="learnedSkillsBtn" class="mini-wide">スキル</button></div>'}
+function setHeroForge(on){const hero=$('.hero');if(on){hero.classList.add('forge-hero');hero.innerHTML='<div class="smith-face">🧔‍♂️</div><div class="smith-speech">いらっしゃい</div>'}else if(hero.classList.contains('forge-hero')){hero.classList.remove('forge-hero');hero.innerHTML=normalHeroHtmlV52();render()}}
+function transitionToV52(label,callback){const ov=$('#sceneTransition');const txt=$('#sceneTransitionText');if(txt)txt.textContent=label;ov.classList.remove('hidden','fadeout');void ov.offsetWidth;ov.classList.add('show');setTimeout(()=>{callback();ov.classList.add('fadeout');setTimeout(()=>{ov.classList.add('hidden');ov.classList.remove('show','fadeout')},500)},650)}
+function switchTab(tab,btn){
+  const doSwitch=()=>{document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));btn.classList.add('active');$('#'+tab).classList.add('active');setHeroForge(tab==='forge');if(tab==='forge')playBgm(forgeBgm);else if(tab==='battle')playBgm(battleBgm);else playBgm(menuBgm)};
+  const labels={gacha:'ショップ',forge:'鍛冶場',battle:'魔王城'};
+  if(labels[tab])transitionToV52(labels[tab],doSwitch);else doSwitch();
+}
+
+$('#detailClose').onclick=()=>$('#detailModal').classList.add('hidden');
+$('#helpClose').onclick=()=>$('#helpModal').classList.add('hidden');
+$('#skillsClose').onclick=()=>$('#skillsModal').classList.add('hidden');
+['detailModal','helpModal','skillsModal'].forEach(id=>{$('#'+id).addEventListener('click',e=>{if(e.target.id===id)e.currentTarget.classList.add('hidden')})});
+bindHeroButtonsV52();
