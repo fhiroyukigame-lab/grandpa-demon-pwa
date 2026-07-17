@@ -265,3 +265,54 @@ function switchTab(tab,btn){
 }
 /* Rebind tabs after override so all tabs use the repaired navigation. */
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab,b));
+
+
+/* ===== Ver.5.6.2: strict hero/header display by screen ===== */
+function setHeroAreaForTabV562(tab){
+  const hero=document.querySelector('.hero');
+  if(!hero)return;
+  if(tab==='gacha'){
+    hero.style.display='';
+    hero.className='hero card shop-hero';
+    hero.innerHTML='<div class="shop-face">👱‍♀️</div><div class="smith-speech">いらっしゃいませ</div>';
+    return;
+  }
+  if(tab==='forge'){
+    hero.style.display='';
+    hero.className='hero card forge-hero';
+    hero.innerHTML='<div class="smith-face">🧔‍♂️</div><div class="smith-speech">いらっしゃい</div>';
+    return;
+  }
+  if(tab==='battle'){
+    hero.style.display='none';
+    return;
+  }
+  hero.style.display='';
+  hero.className='hero card';
+  hero.innerHTML=normalHeroHtmlV52();
+  bindHeroButtonsV52();
+  const st=stats();
+  const setTxt=(sel,val)=>{const el=document.querySelector(sel);if(el)el.textContent=val};
+  setTxt('#playerNameDisplay',state.playerName||'じいさん');
+  setTxt('#hpStat',st.hp);setTxt('#atkStat',st.atk);setTxt('#defStat',st.def);setTxt('#spdStat',st.spd);
+  setTxt('#critStat',st.crit+'%');setTxt('#evaStat',st.eva+'%');setTxt('#lifestealStat',Math.round((st.lifesteal||0)*100)+'%');
+}
+function switchTab(tab,btn){
+  const doSwitch=()=>{
+    document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));
+    if(btn)btn.classList.add('active');
+    const panel=document.querySelector('#'+tab);if(panel)panel.classList.add('active');
+    setHeroAreaForTabV562(tab);
+    if(tab==='forge'){playBgm(forgeBgm);renderForge();}
+    else if(tab==='gacha'){playBgm(titleBgm);renderSkills();}
+    else if(tab==='battle'){
+      playBgm(battleBgm);
+      const mf=document.querySelector('#maxFloor'),sf=document.querySelector('#selectedFloor');
+      if(mf)mf.textContent=state.maxFloor;if(sf)sf.textContent=state.selectedFloor;
+    }else{playBgm(menuBgm);renderEquip();}
+    save();
+  };
+  const labels={gacha:'ショップ',forge:'鍛冶屋',battle:'魔王城'};
+  if(labels[tab])transitionToV52(labels[tab],doSwitch);else doSwitch();
+}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab,b));
