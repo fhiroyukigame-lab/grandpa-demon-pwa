@@ -200,3 +200,68 @@ updateGeneratedNameV55();
 if($('#randomNameBtn'))$('#randomNameBtn').onclick=()=>{playSE();pendingGrandpaNameV55=randomGrandpaNameV55();updateGeneratedNameV55()};
 $('#newGameBtn').onclick=()=>{playSE();if(localStorage.getItem('grandpaDemonSave')&&!confirm('現在のセーブデータを消してニューゲームを始めますか？'))return;localStorage.removeItem('grandpaDemonSave');state=migrate(null);state.playerName=pendingGrandpaNameV55;save();setTimeout(()=>{enterGame();const equipBtn=document.querySelector('.tab[data-tab="equip"]');if(equipBtn)switchTab('equip',equipBtn)},120)};
 $('#continueBtn').onclick=()=>{playSE();state=migrate(load());setTimeout(()=>{enterGame();const equipBtn=document.querySelector('.tab[data-tab="equip"]');if(equipBtn)switchTab('equip',equipBtn)},120)};
+
+
+/* ===== Ver.5.6.1 hotfix: scene transition recovery + hero status refresh ===== */
+function restoreNormalHeroV561(){
+  const hero=document.querySelector('.hero');
+  if(!hero)return;
+  hero.className='hero card';
+  hero.innerHTML=normalHeroHtmlV52();
+  bindHeroButtonsV52();
+  const st=stats();
+  const setTxt=(sel,val)=>{const el=document.querySelector(sel);if(el)el.textContent=val};
+  setTxt('#playerNameDisplay',state.playerName||'じいさん');
+  setTxt('#hpStat',st.hp);
+  setTxt('#atkStat',st.atk);
+  setTxt('#defStat',st.def);
+  setTxt('#spdStat',st.spd);
+  setTxt('#critStat',st.crit+'%');
+  setTxt('#evaStat',st.eva+'%');
+  setTxt('#lifestealStat',Math.round((st.lifesteal||0)*100)+'%');
+}
+function transitionToV52(label,callback){
+  const ov=document.querySelector('#sceneTransition');
+  const txt=document.querySelector('#sceneTransitionText');
+  if(!ov){try{callback()}catch(e){console.error(e)}return}
+  if(txt)txt.textContent=label;
+  ov.classList.remove('hidden','fadeout');
+  void ov.offsetWidth;
+  ov.classList.add('show');
+  setTimeout(()=>{
+    try{callback()}catch(e){console.error('scene transition callback error',e)}
+    finally{
+      ov.classList.add('fadeout');
+      setTimeout(()=>{ov.classList.add('hidden');ov.classList.remove('show','fadeout')},420);
+    }
+  },520);
+}
+function switchTab(tab,btn){
+  const doSwitch=()=>{
+    document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));
+    if(btn)btn.classList.add('active');
+    const panel=document.querySelector('#'+tab);
+    if(panel)panel.classList.add('active');
+    try{placeHeroForTabV54(tab)}catch(e){console.warn('hero placement',e)}
+    if(tab==='forge'){
+      setHeroModeV53('forge'); playBgm(forgeBgm);
+    }else if(tab==='gacha'){
+      setHeroModeV53('shop'); playBgm(titleBgm);
+    }else{
+      restoreNormalHeroV561();
+      if(tab==='battle')playBgm(battleBgm);else playBgm(menuBgm);
+    }
+    if(tab==='equip')renderEquip();
+    else if(tab==='forge')renderForge();
+    else if(tab==='gacha')renderSkills();
+    else if(tab==='battle'){
+      const mf=document.querySelector('#maxFloor');if(mf)mf.textContent=state.maxFloor;
+      const sf=document.querySelector('#selectedFloor');if(sf)sf.textContent=state.selectedFloor;
+    }
+    save();
+  };
+  const labels={gacha:'ショップ',forge:'鍛冶屋',battle:'魔王城'};
+  if(labels[tab])transitionToV52(labels[tab],doSwitch);else doSwitch();
+}
+/* Rebind tabs after override so all tabs use the repaired navigation. */
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab,b));
