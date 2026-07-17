@@ -60,3 +60,18 @@
 @keyframes daggerInLeft{0%{transform:translate(-140vw,-50%) rotate(-38deg);opacity:0}50%{opacity:1}56%,82%{transform:translate(-63%,-50%) rotate(-38deg);opacity:1}100%{transform:translate(-63%,-50%) rotate(-38deg) scale(1.08);opacity:0}}
 @keyframes daggerInRight{0%{transform:translate(140vw,-50%) scaleX(-1) rotate(-38deg);opacity:0}50%{opacity:1}56%,82%{transform:translate(-37%,-50%) scaleX(-1) rotate(-38deg);opacity:1}100%{transform:translate(-37%,-50%) scaleX(-1) rotate(-38deg) scale(1.08);opacity:0}}
 @media(max-width:430px){.battle-intro .dagger{font-size:72px}}
+
+#battleIntroV563{position:fixed;inset:0;z-index:99999;pointer-events:none;display:none;align-items:center;justify-content:center;overflow:hidden;background:rgba(0,0,0,.08)}
+#battleIntroV563.active{display:flex}
+.sword-v563,.sword-center-v563{position:absolute;font-size:88px;line-height:1}
+.sword-left-v563{left:-120px;opacity:.18;filter:saturate(.25) brightness(1.55)}
+.sword-right-v563{right:-120px;opacity:.18;filter:saturate(.25) brightness(1.55);transform:scaleX(-1)}
+#battleIntroV563.active .sword-left-v563{animation:swordLeftInV563 .16s ease-out forwards}
+#battleIntroV563.active .sword-right-v563{animation:swordRightInV563 .16s ease-out forwards}
+.sword-center-v563{opacity:0;transform:scale(.7)}
+#battleIntroV563.hit .sword-left-v563,#battleIntroV563.hit .sword-right-v563{opacity:0}
+#battleIntroV563.hit .sword-center-v563{animation:swordCenterHitV563 .18s ease-out forwards}
+@keyframes swordLeftInV563{from{left:-120px;opacity:.12}to{left:50%;opacity:.38;transform:translateX(-72%)}}
+@keyframes swordRightInV563{from{right:-120px;opacity:.12}to{right:50%;opacity:.38;transform:scaleX(-1) translateX(-72%)}}
+@keyframes swordCenterHitV563{0%{opacity:0;transform:scale(.7)}40%{opacity:1;transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
+.battle-grandpa-face-v563{font-size:72px;line-height:1;display:inline-block}

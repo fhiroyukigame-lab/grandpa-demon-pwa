@@ -28,7 +28,7 @@ const DEFAULT_STATE={version:3,gold:300,playerName:'ゲンゾウ',maxFloor:0,sel
 const GRANDPA_NAMES=['ゲンゾウ','テツジ','シゲル','カンゾウ','リュウゾウ','ゴロウ','イチロウ','サブロウ','キンジ','トラキチ','ハチベエ','シンベエ','ゴンザ','タツノスケ','ジンベエ'];
 function cloneDefaultState(){return JSON.parse(JSON.stringify(DEFAULT_STATE));}
 let state=migrate(load());state.gears.forEach(g=>{if(!g.name){g.name='オールド'+g.suffix;g.locked=true;g.effects=g.effects||[]}if(/^名もなき/.test(g.name)){const a=ADJECTIVES[Math.floor(Math.random()*ADJECTIVES.length)],n=ABSTRACT_NOUNS[Math.floor(Math.random()*ABSTRACT_NOUNS.length)];g.name=a[0]+n[0]+'の'+g.suffix;g.locked=true;g.effects=[a[2],n[2]];g.bonus=g.bonus||{};addBonus(g.bonus,a[1]);addBonus(g.bonus,n[1])}});let pendingGearId=null;let battle=null,battleTimer=null,cooldowns=[0,0,0];
-const $=s=>document.querySelector(s);const titleBgm=$('#titleBgm'),menuBgm=$('#menuBgm'),battleBgm=$('#battleBgm'),forgeBgm=$('#forgeBgm'),hitSe=$('#hitSe'),buttonSe=$('#buttonSe'),equipButtonSe=$('#equipButtonSe'),slotButtonSe=$('#slotButtonSe'),rouletteSe=$('#rouletteSe'),slotResultSe=$('#slotResultSe'),clashSe=$('#clashSe');
+const $=s=>document.querySelector(s);const titleBgm=$('#titleBgm'),menuBgm=$('#menuBgm'),battleBgm=$('#battleBgm'),forgeBgm=$('#forgeBgm'),hitSe=$('#hitSe'),buttonSe=$('#buttonSe'),equipButtonSe=$('#equipButtonSe'),slotButtonSe=$('#slotButtonSe'),rouletteSe=$('#rouletteSe'),slotResultSe=$('#slotResultSe'),clashSe=$('#clashSe'),castleButtonSe=$('#castleButtonSe');
 window.addEventListener('error',e=>console.error('APP ERROR:',e.error||e.message));
 function uid(){return 'g'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function starter(slot,suffix,base,name){return {id:uid(),slot,suffix,base:{...base},bonus:{},level:0,name,locked:true}}
@@ -316,3 +316,56 @@ function switchTab(tab,btn){
   if(labels[tab])transitionToV52(labels[tab],doSwitch);else doSwitch();
 }
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab,b));
+
+/* ===== Ver.5.6.3 overrides ===== */
+function playCastleButtonSEV563(){
+  try{
+    if(!castleButtonSe)return;
+    castleButtonSe.pause();castleButtonSe.currentTime=0;
+    const p=castleButtonSe.play();if(p&&p.catch)p.catch(()=>{});
+  }catch(e){}
+}
+function playBattleIntroV563(done){
+  let ov=document.querySelector('#battleIntroV563');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='battleIntroV563';
+    ov.innerHTML='<div class="sword-v563 sword-left-v563">⚔️</div><div class="sword-v563 sword-right-v563">⚔️</div><div class="sword-center-v563">⚔️</div>';
+    document.body.appendChild(ov);
+  }
+  ov.classList.remove('active','hit');void ov.offsetWidth;ov.classList.add('active');
+  setTimeout(()=>{ov.classList.add('hit');try{clashSe.currentTime=0;const p=clashSe.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}},150);
+  setTimeout(()=>{ov.classList.remove('active','hit');if(done)done()},390);
+}
+document.querySelectorAll('.tab').forEach(b=>{
+  b.onclick=(ev)=>{
+    if(b.dataset.tab==='battle'){
+      try{ev.stopPropagation()}catch(e){}
+      playCastleButtonSEV563();
+    }
+    switchTab(b.dataset.tab,b);
+  };
+});
+const startBattleBtnV563=document.querySelector('#startBattle');
+if(startBattleBtnV563){
+  startBattleBtnV563.onclick=()=>{
+    if(startBattleBtnV563.disabled)return;
+    startBattleBtnV563.disabled=true;
+    playBattleIntroV563(()=>{
+      startBattleBtnV563.disabled=false;
+      try{if(typeof startBattle==='function')startBattle()}catch(e){console.error(e)}
+    });
+  };
+}
+function renderBattleGrandpaFaceOnlyV563(){
+  const el=document.querySelector('#playerAvatar');
+  if(el)el.innerHTML='<span class="battle-grandpa-face-v563">👴</span>';
+}
+if(typeof renderBattle==='function'){
+  const oldRenderBattleV563=renderBattle;
+  renderBattle=function(){
+    const r=oldRenderBattleV563.apply(this,arguments);
+    renderBattleGrandpaFaceOnlyV563();
+    return r;
+  };
+}
