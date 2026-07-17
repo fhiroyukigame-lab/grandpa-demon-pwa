@@ -75,3 +75,5 @@
 @keyframes swordRightInV563{from{right:-120px;opacity:.12}to{right:50%;opacity:.38;transform:scaleX(-1) translateX(-72%)}}
 @keyframes swordCenterHitV563{0%{opacity:0;transform:scale(.7)}40%{opacity:1;transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
 .battle-grandpa-face-v563{font-size:72px;line-height:1;display:inline-block}
+
+#battleIntroV563{display:none !important}
