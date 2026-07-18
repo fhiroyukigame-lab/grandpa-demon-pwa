@@ -76,4 +76,18 @@
 @keyframes swordCenterHitV563{0%{opacity:0;transform:scale(.7)}40%{opacity:1;transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
 .battle-grandpa-face-v563{font-size:72px;line-height:1;display:inline-block}
 
-#battleIntroV563{display:none !important}
+#battleIntroV563{
+  position:fixed;inset:0;z-index:99999;pointer-events:none;display:none;
+  align-items:center;justify-content:center;background:rgba(0,0,0,.08)
+}
+#battleIntroV563.active{display:flex}
+.sword-center-v564{font-size:92px;line-height:1;opacity:0;transform:scale(.7)}
+#battleIntroV563.hit .sword-center-v564{animation:swordCenterFlashV564 .20s ease-out forwards}
+@keyframes swordCenterFlashV564{
+  0%{opacity:0;transform:scale(.7)}
+  35%{opacity:1;transform:scale(1.15)}
+  100%{opacity:1;transform:scale(1)}
+}
+.grandpa-status-face{font-size:76px;line-height:1;flex:0 0 auto}
+
+.merchant-card{display:flex;align-items:center;gap:24px;min-height:150px;padding:24px;margin-bottom:18px}.merchant-card.hidden{display:none!important}.merchant-face{font-size:78px;line-height:1;flex:0 0 auto}.merchant-speech{position:relative;background:#fff;color:#17120f;border-radius:24px;padding:18px 26px;font-weight:800;font-size:22px;flex:1;text-align:center}.merchant-speech:before{content:"";position:absolute;left:50%;top:-14px;transform:translateX(-50%);border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:16px solid #fff}
