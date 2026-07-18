@@ -627,3 +627,96 @@ if(typeof renderSkills==='function'){
     return r;
   };
 }
+
+/* ===== Ver.5.6.8: correct menu placement + skill result destination ===== */
+
+function getSkillCatalogV568(name){
+  if(typeof SKILLS!=='undefined'){
+    if(SKILLS[name]) return SKILLS[name];
+    if(Array.isArray(SKILLS)){
+      const found=SKILLS.find(x=>x && (x.name===name || x.id===name));
+      if(found)return found;
+    }
+  }
+  return null;
+}
+
+function cleanSkillLearningAreaV568(){
+  const shop=document.querySelector('#gacha');
+  if(!shop)return;
+
+  /* Remove any skill equip/equipped buttons from the shop screen. */
+  shop.querySelectorAll('[data-skill-equip], .skill-equip-btn, .equipped-btn').forEach(el=>el.remove());
+
+  /* Remove legacy learned-skill rows/cards from the skill section. */
+  shop.querySelectorAll('.skill-row, .skill-card').forEach(row=>{
+    if(!row.closest('#skillLearnResultV568')) row.remove();
+  });
+
+  /* Remove stray skill result text from the equipment-purchase card. */
+  const gearArea = shop.querySelector('#gearResult, #slotResult, #gachaResult, .gear-result, .slot-result');
+  if(gearArea){
+    const txt=gearArea.textContent||'';
+    if(txt.includes('スキル') || txt.includes('Lv.')){
+      gearArea.innerHTML='';
+    }
+  }
+}
+
+function showSkillLearnResultV568(name, level){
+  const box=document.querySelector('#skillLearnResultV568');
+  if(!box)return;
+
+  const sk=getSkillCatalogV568(name);
+  const desc=(sk && (sk.desc||sk.effect)) ? (sk.desc||sk.effect) : 'パッシブスキル';
+
+  box.classList.remove('hidden');
+  box.innerHTML=`
+    <div class="skill-learn-result-title-v568">習得したスキル</div>
+    <div class="skill-learn-result-name-v568">${name}${level>1?` Lv.${level}`:''}</div>
+    <div class="skill-learn-result-effect-v568">${desc}</div>
+  `;
+}
+
+/* Observe skill purchases by wrapping the purchase handler. */
+(function installSkillPurchaseHookV568(){
+  const btn =
+    document.querySelector('#buySkill') ||
+    document.querySelector('#skillGacha') ||
+    document.querySelector('#skillBuy') ||
+    Array.from(document.querySelectorAll('#gacha button')).find(b=>(b.textContent||'').includes('スキル習得'));
+
+  if(!btn)return;
+
+  const oldHandler=btn.onclick;
+  btn.onclick=function(ev){
+    const before=Object.assign({}, state.skills||{});
+    const result = oldHandler ? oldHandler.call(this,ev) : undefined;
+
+    setTimeout(()=>{
+      const after=state.skills||{};
+      let gained=null, lvl=1;
+      Object.keys(after).forEach(name=>{
+        if((after[name]||0)>(before[name]||0)){
+          gained=name;
+          lvl=after[name];
+        }
+      });
+
+      cleanSkillLearningAreaV568();
+      if(gained)showSkillLearnResultV568(gained,lvl);
+    },50);
+
+    return result;
+  };
+})();
+
+/* Clean the skill area whenever shop is rendered/opened. */
+if(typeof renderSkills==='function'){
+  const oldRenderSkillsV568=renderSkills;
+  renderSkills=function(){
+    const r=oldRenderSkillsV568.apply(this,arguments);
+    setTimeout(cleanSkillLearningAreaV568,0);
+    return r;
+  };
+}

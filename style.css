@@ -159,3 +159,31 @@
 .skill-purchase-label-v567{font-size:13px;opacity:.62;margin-bottom:7px}
 .skill-purchase-name-v567{font-size:24px;font-weight:800;margin-bottom:8px}
 .skill-purchase-effect-v567{font-size:16px;line-height:1.6;opacity:.86}
+
+/* ===== Ver.5.6.8 layout + skill result ===== */
+.tabs{order:0}
+.hero{order:1}
+
+.skill-learn-result-v568{
+  margin-top:16px;
+  padding:16px 18px;
+  border-radius:16px;
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.08);
+}
+.skill-learn-result-v568.hidden{display:none}
+.skill-learn-result-title-v568{
+  font-size:13px;
+  opacity:.62;
+  margin-bottom:6px;
+}
+.skill-learn-result-name-v568{
+  font-size:23px;
+  font-weight:800;
+  margin-bottom:7px;
+}
+.skill-learn-result-effect-v568{
+  font-size:16px;
+  line-height:1.55;
+  opacity:.88;
+}
