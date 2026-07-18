@@ -603,3 +603,27 @@ setTimeout(()=>{
   const active=document.querySelector('.panel.active');
   setTopAreaForTabV566(active?active.id:'equip');
 },0);
+
+/* ===== Ver.5.6.7: shop skill result cleanup ===== */
+function cleanShopSkillButtonsV567(){
+  const shop=document.querySelector('#gacha');
+  if(!shop)return;
+  shop.querySelectorAll('[data-skill-equip], .skill-equip-btn, .equipped-btn').forEach(el=>el.remove());
+}
+function showSkillPurchaseResultV567(name,desc,level){
+  const box=document.querySelector('#skillResult') || document.querySelector('#skillGachaResult') || document.querySelector('#skillResultBox');
+  if(!box)return;
+  box.innerHTML=`<div class="skill-purchase-result-v567">
+    <div class="skill-purchase-label-v567">習得したスキル</div>
+    <div class="skill-purchase-name-v567">${name}${level>1?` Lv.${level}`:''}</div>
+    <div class="skill-purchase-effect-v567">${desc||'パッシブスキル'}</div>
+  </div>`;
+}
+if(typeof renderSkills==='function'){
+  const oldRenderSkillsV567=renderSkills;
+  renderSkills=function(){
+    const r=oldRenderSkillsV567.apply(this,arguments);
+    cleanShopSkillButtonsV567();
+    return r;
+  };
+}

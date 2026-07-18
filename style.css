@@ -153,3 +153,9 @@
   .grandpa-name-v566{font-size:24px}
   .grandpa-status-actions-v566{grid-template-columns:1fr 1fr 1fr}
 }
+
+.tabs{margin-bottom:18px}
+.skill-purchase-result-v567{margin-top:18px;padding:18px;border-radius:18px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08)}
+.skill-purchase-label-v567{font-size:13px;opacity:.62;margin-bottom:7px}
+.skill-purchase-name-v567{font-size:24px;font-weight:800;margin-bottom:8px}
+.skill-purchase-effect-v567{font-size:16px;line-height:1.6;opacity:.86}
