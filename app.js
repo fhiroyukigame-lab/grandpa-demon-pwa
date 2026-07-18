@@ -495,3 +495,111 @@ function switchTab(tab,btn){
 }
 document.querySelectorAll('.tab').forEach(b=>{b.onclick=(ev)=>{if(b.dataset.tab==='battle'){try{ev.stopPropagation()}catch(e){}playCastleButtonSEV563();}switchTab(b.dataset.tab,b);};});
 setTimeout(()=>setTopCardsForTabV565('equip'),0);
+
+/* ===== Ver.5.6.6: status window only on Equipment screen ===== */
+function renderGrandpaStatusCardV566(){
+  const hero=document.querySelector('.hero');
+  if(!hero)return;
+
+  hero.style.display='';
+  hero.className='hero card grandpa-status-card-v566';
+  hero.innerHTML=`
+    <div class="grandpa-status-main-v566">
+      <div class="grandpa-status-face-v566">👴</div>
+      <div class="grandpa-status-body-v566">
+        <div class="grandpa-name-v566" id="playerNameDisplay">${state.playerName||'じいさん'}</div>
+        <div class="grandpa-stats-v566">
+          <div><span>HP</span><b id="hpStat"></b></div>
+          <div><span>攻撃</span><b id="atkStat"></b></div>
+          <div><span>防御</span><b id="defStat"></b></div>
+          <div><span>速度</span><b id="spdStat"></b></div>
+          <div><span>会心</span><b id="critStat"></b></div>
+          <div><span>回避</span><b id="evaStat"></b></div>
+          <div><span>HP吸収</span><b id="lifestealStat"></b></div>
+        </div>
+      </div>
+    </div>
+    <div class="grandpa-status-actions-v566">
+      <button id="statusDetailBtn">ステータス詳細</button>
+      <button id="statusHelpBtn">ヘルプ</button>
+      <button id="learnedSkillsBtn">スキル</button>
+    </div>`;
+
+  const st=stats();
+  const put=(sel,val)=>{const el=document.querySelector(sel);if(el)el.textContent=val};
+  put('#hpStat',st.hp);
+  put('#atkStat',st.atk);
+  put('#defStat',st.def);
+  put('#spdStat',st.spd);
+  put('#critStat',st.crit+'%');
+  put('#evaStat',st.eva+'%');
+  put('#lifestealStat',Math.round((st.lifesteal||0)*100)+'%');
+  bindHeroButtonsV52();
+}
+
+function setTopAreaForTabV566(tab){
+  const hero=document.querySelector('.hero');
+  const shop=document.querySelector('#shopMerchantCard');
+  const forge=document.querySelector('#forgeMerchantCard');
+
+  if(shop)shop.remove();
+  if(forge)forge.remove();
+
+  if(!hero)return;
+
+  if(tab==='equip'){
+    renderGrandpaStatusCardV566();
+  }else{
+    hero.style.display='none';
+  }
+}
+
+function switchTab(tab,btn){
+  const doSwitch=()=>{
+    document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));
+    if(btn)btn.classList.add('active');
+
+    const panel=document.querySelector('#'+tab);
+    if(panel)panel.classList.add('active');
+
+    setTopAreaForTabV566(tab);
+
+    if(tab==='forge'){
+      playBgm(forgeBgm);
+      renderForge();
+    }else if(tab==='gacha'){
+      playBgm(titleBgm);
+      renderSkills();
+    }else if(tab==='battle'){
+      playBgm(battleBgm);
+      const mf=document.querySelector('#maxFloor');
+      const sf=document.querySelector('#selectedFloor');
+      if(mf)mf.textContent=state.maxFloor;
+      if(sf)sf.textContent=state.selectedFloor;
+    }else{
+      playBgm(menuBgm);
+      renderEquip();
+      renderGrandpaStatusCardV566();
+    }
+    save();
+  };
+
+  const labels={gacha:'ショップ',forge:'鍛冶屋',battle:'魔王城'};
+  if(labels[tab])transitionToV52(labels[tab],doSwitch);
+  else doSwitch();
+}
+
+document.querySelectorAll('.tab').forEach(b=>{
+  b.onclick=(ev)=>{
+    if(b.dataset.tab==='battle'){
+      try{ev.stopPropagation()}catch(e){}
+      if(typeof playCastleButtonSEV563==='function')playCastleButtonSEV563();
+    }
+    switchTab(b.dataset.tab,b);
+  };
+});
+
+setTimeout(()=>{
+  const active=document.querySelector('.panel.active');
+  setTopAreaForTabV566(active?active.id:'equip');
+},0);

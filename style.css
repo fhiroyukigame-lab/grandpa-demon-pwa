@@ -91,3 +91,65 @@
 .grandpa-status-face{font-size:76px;line-height:1;flex:0 0 auto}
 
 .merchant-card{display:flex;align-items:center;gap:24px;min-height:150px;padding:24px;margin-bottom:18px}.merchant-card.hidden{display:none!important}.merchant-face{font-size:78px;line-height:1;flex:0 0 auto}.merchant-speech{position:relative;background:#fff;color:#17120f;border-radius:24px;padding:18px 26px;font-weight:800;font-size:22px;flex:1;text-align:center}.merchant-speech:before{content:"";position:absolute;left:50%;top:-14px;transform:translateX(-50%);border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:16px solid #fff}
+
+
+/* ===== Ver.5.6.6 grandpa status card ===== */
+.grandpa-status-card-v566{
+  padding:22px;
+  display:block;
+}
+.grandpa-status-main-v566{
+  display:flex;
+  align-items:center;
+  gap:20px;
+}
+.grandpa-status-face-v566{
+  font-size:78px;
+  line-height:1;
+  flex:0 0 auto;
+}
+.grandpa-status-body-v566{
+  flex:1;
+  min-width:0;
+}
+.grandpa-name-v566{
+  font-size:28px;
+  font-weight:800;
+  margin-bottom:14px;
+}
+.grandpa-stats-v566{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px 14px;
+}
+.grandpa-stats-v566>div{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+  border-radius:12px;
+  background:rgba(255,255,255,.04);
+}
+.grandpa-stats-v566 span{
+  opacity:.72;
+  font-size:14px;
+}
+.grandpa-stats-v566 b{
+  font-size:17px;
+}
+.grandpa-status-actions-v566{
+  display:grid;
+  grid-template-columns:1.4fr 1fr 1fr;
+  gap:10px;
+  margin-top:16px;
+}
+.grandpa-status-actions-v566 button{
+  min-height:46px;
+}
+@media(max-width:520px){
+  .grandpa-status-main-v566{align-items:flex-start}
+  .grandpa-status-face-v566{font-size:68px}
+  .grandpa-name-v566{font-size:24px}
+  .grandpa-status-actions-v566{grid-template-columns:1fr 1fr 1fr}
+}
