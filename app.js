@@ -86,7 +86,7 @@ function setHeroForge(on){const hero=$('.hero');if(on){hero.classList.add('forge
 
 const heroElV54=document.querySelector('.hero');const tabsElV54=document.querySelector('.tabs');
 function placeHeroForTabV54(tab){const mount=$('#battleHeroMount');if(tab==='battle'&&mount&&heroElV54){mount.appendChild(heroElV54)}else if(heroElV54&&tabsElV54&&tabsElV54.parentNode){tabsElV54.parentNode.insertBefore(heroElV54,tabsElV54)}}
-function switchTab(tab,btn){const doSwitch=()=>{document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));btn.classList.add('active');$('#'+tab).classList.add('active');setHeroForge(tab==='forge');if(tab==='forge')playBgm(forgeBgm);else if(tab==='battle')playBgm(battleBgm);else if(tab==='gacha')playBgm(titleBgm);else playBgm(menuBgm)};if(tab==='forge'){const ov=$('#sceneTransition');ov.classList.remove('hidden');void ov.offsetWidth;ov.classList.add('show');setTimeout(()=>{doSwitch();ov.classList.add('fadeout');setTimeout(()=>{ov.classList.add('hidden');ov.classList.remove('show','fadeout')},500)},650)}else doSwitch()}
+
 function enterGame(){playBgm(menuBgm);$('#titleScreen').classList.add('hidden');$('#gameApp').classList.remove('hidden');render()}function showTitle(){stopBgms();$('#gameApp').classList.add('hidden');$('#titleScreen').classList.remove('hidden');$('#continueBtn').disabled=!localStorage.getItem('grandpaDemonSave')}
 let titleAudioUnlocked=true;
 $('#newGameBtn').onclick=()=>{playSE();if(localStorage.getItem('grandpaDemonSave')&&!confirm('現在のセーブデータを消してニューゲームを始めますか？'))return;localStorage.removeItem('grandpaDemonSave');state=migrate(null);save();setTimeout(enterGame,180)};$('#continueBtn').onclick=()=>{playSE();state=migrate(load());setTimeout(enterGame,180)};
@@ -97,418 +97,31 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
 if('serviceWorker'in navigator){let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;location.reload()});window.addEventListener('load',async()=>{try{const r=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});if(r.waiting)r.waiting.postMessage({type:'SKIP_WAITING'});r.addEventListener('updatefound',()=>{const w=r.installing;if(w)w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)w.postMessage({type:'SKIP_WAITING'})})})}catch(e){console.warn(e)}})}
 showTitle();
 
-/* ===== Ver.5.2: detailed breakdowns, status help, skills window, scene transitions ===== */
-const STAT_LABELS_V52={hp:'HP',atk:'攻撃',def:'防御',spd:'速度',crit:'会心',eva:'回避',lifesteal:'HP吸収'};
-function fmtStatV52(k,v){
-  if(k==='lifesteal') return `${v>=0?'+':''}${Math.round(v*100)}%`;
-  if(k==='crit'||k==='eva') return `${v>=0?'+':''}${v}%`;
-  return `${v>=0?'+':''}${v}`;
-}
-function objectStatLinesV52(obj){
-  return Object.keys(STAT_LABELS_V52).filter(k=>obj&&obj[k]).map(k=>`${STAT_LABELS_V52[k]} ${fmtStatV52(k,obj[k])}`);
-}
-function nameBonusForGearV52(g){
-  const out={};
-  const labels=new Set(g.effects||[]);
-  [...ADJECTIVES,...ABSTRACT_NOUNS].forEach(x=>{if(labels.has(x[2]))addBonus(out,x[1])});
-  return out;
-}
-function residualBonusV52(g,nameBonus){
-  const out={};
-  Object.keys(g.bonus||{}).forEach(k=>{const v=(g.bonus[k]||0)-(nameBonus[k]||0);if(Math.abs(v)>1e-9)out[k]=v});
-  return out;
-}
-function totalGearStatsV52(g){const out={};addBonus(out,g.base||{});addBonus(out,g.bonus||{});return out}
-function showGearBreakdownV52(id){
-  const g=gear(id);if(!g)return;
-  const named=nameBonusForGearV52(g),other=residualBonusV52(g,named),total=totalGearStatsV52(g);
-  const effectNames=(g.effects||[]).length?(g.effects||[]).map(x=>`<div>${x}</div>`).join(''):'<div>名称による追加効果なし</div>';
-  const baseLines=objectStatLinesV52(g.base).join(' / ')||'なし';
-  const otherLines=objectStatLinesV52(other).join(' / ')||'なし';
-  const totalLines=objectStatLinesV52(total).join(' / ')||'能力なし';
-  $('#detailTitle').textContent=g.name+' の内訳';
-  $('#detailContent').innerHTML=`
-    <div class="detail-section"><b>装備の名称による詳細効果</b>${effectNames}</div>
-    <div class="detail-section"><b>装備品の基礎効果</b><div>${baseLines}</div></div>
-    <div class="detail-section"><b>その他の効果（鍛冶屋強化・継承など）</b><div>${otherLines}</div></div>
-    <div class="detail-section detail-total"><b>ステータス合計</b><div>${totalLines}</div></div>`;
-  $('#detailModal').classList.remove('hidden');
-}
-function playerBreakdownV52(){
-  const base={hp:128,atk:12,def:5,spd:50,crit:5,eva:3,lifesteal:0};
-  const gearParts=[];const total=stats();
-  Object.keys(SLOT_LABEL).forEach(slot=>{const g=gear(state.equipped[slot]);if(g)gearParts.push({slot,name:g.name,stats:totalGearStatsV52(g)})});
-  return {base,gearParts,total};
-}
-function showStatusDetailV52(){
-  const b=playerBreakdownV52();
-  let html=`<div class="detail-section"><b>${state.playerName||'じいさん'}自身の基礎ステータス</b><div>${objectStatLinesV52(b.base).join(' / ')}</div></div>`;
-  b.gearParts.forEach(x=>{html+=`<div class="detail-section"><b>${SLOT_LABEL[x.slot]}：${x.name}</b><div>${objectStatLinesV52(x.stats).join(' / ')||'補正なし'}</div></div>`});
-  html+=`<div class="detail-section detail-total"><b>現在の最終ステータス合計</b><div>${objectStatLinesV52(b.total).join(' / ')}</div></div>`;
-  $('#detailTitle').textContent='じいさんのステータス詳細';$('#detailContent').innerHTML=html;$('#detailModal').classList.remove('hidden');
-}
-function showLearnedSkillsV52(){
-  const entries=Object.entries(state.skills||{});
-  $('#learnedSkillsContent').innerHTML=entries.length?entries.map(([name,lv])=>{const sk=SKILLS.find(s=>s.name===name);const equipped=state.equippedSkills.includes(name)?'（装備中）':'';return `<div class="skill-modal-row"><b>${name} Lv.${lv} ${equipped}</b><div class="item-meta">${sk?sk.desc:'パッシブスキル'}</div></div>`}).join(''):'まだスキルを習得していません。';
-  $('#skillsModal').classList.remove('hidden');
-}
-function bindHeroButtonsV52(){
-  const d=$('#statusDetailBtn'),h=$('#statusHelpBtn'),s=$('#learnedSkillsBtn');
-  if(d)d.onclick=showStatusDetailV52;if(h)h.onclick=()=>$('#helpModal').classList.remove('hidden');if(s)s.onclick=showLearnedSkillsV52;
-}
-function render(){
-  const s=stats();const set=(id,val)=>{const e=$(id);if(e)e.textContent=val};
-  set('#gold',state.gold);set('#playerNameDisplay',state.playerName||'じいさん');set('#battlePlayerName',state.playerName||'じいさん');
-  set('#hpStat',s.hp);set('#atkStat',s.atk);set('#defStat',s.def);set('#spdStat',s.spd);set('#critStat',s.crit+'%');set('#evaStat',s.eva+'%');set('#lifestealStat',Math.round((s.lifesteal||0)*100)+'%');set('#maxFloor',state.maxFloor);set('#selectedFloor',state.selectedFloor);
-  renderGrandpa($('#shopGrandpa'));renderGrandpa($('#playerAvatar'));
-  const active=document.querySelector('.panel.active');const activeId=active?active.id:'equip';
-  if(activeId==='equip')renderEquip();
-  else if(activeId==='forge')renderForge();
-  else if(activeId==='gacha')renderSkills();
-  bindHeroButtonsV52();save();
-}
-function renderEquip(){
-  const slots=$('#equipSlots');slots.innerHTML='';Object.keys(SLOT_LABEL).forEach(slot=>{const g=gear(state.equipped[slot]);const emoji=g?gearEmoji(slot,g.suffix):(slot==='head'?'🎩':slot==='body'?'🥋':slot==='right'?'⚔️':'🛡️');slots.insertAdjacentHTML('beforeend',`<div class="equip-slot"><div class="slot-label">${SLOT_LABEL[slot]}</div><div class="slot-name">${g?g.name:'なし'}</div><div class="item-meta">${g?statSummary(g):''}</div><div class="equip-slot-actions">${g?`<button class="breakdown-btn" data-breakdown="${g.id}">内訳</button>`:''}<span class="slot-emoji">${emoji}</span></div></div>`) });
-  const inv=$('#inventory');inv.innerHTML='';state.gears.forEach(g=>{const row=document.createElement('div');row.className='gear-card compact-gear';const equipped=state.equipped[g.slot]===g.id;row.innerHTML=`<div class="gear-row compact-row"><div class="gear-info"><div class="gear-title-line"><span class="gear-category">${SLOT_LABEL[g.slot]}</span><b>${g.name}</b></div><div class="item-meta">強化+${g.level}｜${statSummary(g)}</div><div class="gear-actions"><button class="breakdown-btn" data-breakdown="${g.id}">内訳</button></div></div><div class="gear-actions compact-actions"><button data-equip class="${equipped?'equipped-btn':''}" ${equipped?'disabled':''}>${equipped?'装備中':'装備'}</button></div></div>`;const eb=row.querySelector('[data-equip]');eb.onclick=()=>{if(equipped)return;playEquipSE();state.equipped[g.slot]=g.id;render()};inv.appendChild(row)});
-  bindBreakdownButtonsV52();
-}
-function setHeroModeV53(mode){
-  const hero=$('.hero');if(!hero)return;
-  if(mode==='forge'){hero.className='hero card forge-hero';hero.innerHTML='<div class="smith-face">🧔‍♂️</div><div class="smith-speech">いらっしゃい</div>';return;}
-  if(mode==='shop'){hero.className='hero card shop-hero';hero.innerHTML='<div class="shop-face">👱‍♀️</div><div class="smith-speech">いらっしゃいませ</div>';return;}
-  hero.className='hero card';hero.innerHTML=normalHeroHtmlV52();render();
-}
-function transitionToV52(label,callback){const ov=$('#sceneTransition');const txt=$('#sceneTransitionText');if(txt)txt.textContent=label;ov.classList.remove('hidden','fadeout');void ov.offsetWidth;ov.classList.add('show');setTimeout(()=>{callback();ov.classList.add('fadeout');setTimeout(()=>{ov.classList.add('hidden');ov.classList.remove('show','fadeout')},500)},650)}
-function switchTab(tab,btn){
-  const doSwitch=()=>{document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));btn.classList.add('active');$('#'+tab).classList.add('active');placeHeroForTabV54(tab);setHeroModeV53(tab==='forge'?'forge':tab==='gacha'?'shop':'normal');if(tab==='forge')playBgm(forgeBgm);else if(tab==='battle')playBgm(battleBgm);else if(tab==='gacha')playBgm(titleBgm);else playBgm(menuBgm)};
-  const labels={gacha:'ショップ',forge:'鍛冶屋',battle:'魔王城'};
-  if(labels[tab])transitionToV52(labels[tab],doSwitch);else doSwitch();
-}
-
-$('#detailClose').onclick=()=>$('#detailModal').classList.add('hidden');
-$('#helpClose').onclick=()=>$('#helpModal').classList.add('hidden');
-$('#skillsClose').onclick=()=>$('#skillsModal').classList.add('hidden');
-['detailModal','helpModal','skillsModal'].forEach(id=>{$('#'+id).addEventListener('click',e=>{if(e.target.id===id)e.currentTarget.classList.add('hidden')})});
-bindHeroButtonsV52();
 
 
-/* ===== Ver.5.5: generated-only grandpa name + startup fixes ===== */
-function randomGrandpaNameV55(){return GRANDPA_NAMES[Math.floor(Math.random()*GRANDPA_NAMES.length)]}
-let pendingGrandpaNameV55=randomGrandpaNameV55();
-function updateGeneratedNameV55(){const el=$('#grandpaNameDisplay');if(el)el.textContent=pendingGrandpaNameV55}
-updateGeneratedNameV55();
-if($('#randomNameBtn'))$('#randomNameBtn').onclick=()=>{playSE();pendingGrandpaNameV55=randomGrandpaNameV55();updateGeneratedNameV55()};
-$('#newGameBtn').onclick=()=>{playSE();if(localStorage.getItem('grandpaDemonSave')&&!confirm('現在のセーブデータを消してニューゲームを始めますか？'))return;localStorage.removeItem('grandpaDemonSave');state=migrate(null);state.playerName=pendingGrandpaNameV55;save();setTimeout(()=>{enterGame();const equipBtn=document.querySelector('.tab[data-tab="equip"]');if(equipBtn)switchTab('equip',equipBtn)},120)};
-$('#continueBtn').onclick=()=>{playSE();state=migrate(load());setTimeout(()=>{enterGame();const equipBtn=document.querySelector('.tab[data-tab="equip"]');if(equipBtn)switchTab('equip',equipBtn)},120)};
+/* ===== CLEAN BUILD 5.6.9 ===== */
 
-
-/* ===== Ver.5.6.1 hotfix: scene transition recovery + hero status refresh ===== */
-function restoreNormalHeroV561(){
-  const hero=document.querySelector('.hero');
-  if(!hero)return;
-  hero.className='hero card';
-  hero.innerHTML=normalHeroHtmlV52();
-  bindHeroButtonsV52();
-  const st=stats();
-  const setTxt=(sel,val)=>{const el=document.querySelector(sel);if(el)el.textContent=val};
-  setTxt('#playerNameDisplay',state.playerName||'じいさん');
-  setTxt('#hpStat',st.hp);
-  setTxt('#atkStat',st.atk);
-  setTxt('#defStat',st.def);
-  setTxt('#spdStat',st.spd);
-  setTxt('#critStat',st.crit+'%');
-  setTxt('#evaStat',st.eva+'%');
-  setTxt('#lifestealStat',Math.round((st.lifesteal||0)*100)+'%');
+/* ---------- Common helpers ---------- */
+function safeText(sel,val){
+  const el=document.querySelector(sel);
+  if(el)el.textContent=val;
 }
-function transitionToV52(label,callback){
-  const ov=document.querySelector('#sceneTransition');
-  const txt=document.querySelector('#sceneTransitionText');
-  if(!ov){try{callback()}catch(e){console.error(e)}return}
-  if(txt)txt.textContent=label;
-  ov.classList.remove('hidden','fadeout');
-  void ov.offsetWidth;
-  ov.classList.add('show');
-  setTimeout(()=>{
-    try{callback()}catch(e){console.error('scene transition callback error',e)}
-    finally{
-      ov.classList.add('fadeout');
-      setTimeout(()=>{ov.classList.add('hidden');ov.classList.remove('show','fadeout')},420);
-    }
-  },520);
-}
-function switchTab(tab,btn){
-  const doSwitch=()=>{
-    document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));
-    if(btn)btn.classList.add('active');
-    const panel=document.querySelector('#'+tab);
-    if(panel)panel.classList.add('active');
-    try{placeHeroForTabV54(tab)}catch(e){console.warn('hero placement',e)}
-    if(tab==='forge'){
-      setHeroModeV53('forge'); playBgm(forgeBgm);
-    }else if(tab==='gacha'){
-      setHeroModeV53('shop'); playBgm(titleBgm);
-    }else{
-      restoreNormalHeroV561();
-      if(tab==='battle')playBgm(battleBgm);else playBgm(menuBgm);
-    }
-    if(tab==='equip')renderEquip();
-    else if(tab==='forge')renderForge();
-    else if(tab==='gacha')renderSkills();
-    else if(tab==='battle'){
-      const mf=document.querySelector('#maxFloor');if(mf)mf.textContent=state.maxFloor;
-      const sf=document.querySelector('#selectedFloor');if(sf)sf.textContent=state.selectedFloor;
-    }
-    save();
-  };
-  const labels={gacha:'ショップ',forge:'鍛冶屋',battle:'魔王城'};
-  if(labels[tab])transitionToV52(labels[tab],doSwitch);else doSwitch();
-}
-/* Rebind tabs after override so all tabs use the repaired navigation. */
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab,b));
-
-
-/* ===== Ver.5.6.2: strict hero/header display by screen ===== */
-function setHeroAreaForTabV562(tab){
-  const hero=document.querySelector('.hero');
-  if(!hero)return;
-  if(tab==='gacha'){
-    hero.style.display='';
-    hero.className='hero card shop-hero';
-    hero.innerHTML='<div class="shop-face">👱‍♀️</div><div class="smith-speech">いらっしゃいませ</div>';
-    return;
-  }
-  if(tab==='forge'){
-    hero.style.display='';
-    hero.className='hero card forge-hero';
-    hero.innerHTML='<div class="smith-face">🧔‍♂️</div><div class="smith-speech">いらっしゃい</div>';
-    return;
-  }
-  if(tab==='battle'){
-    hero.style.display='none';
-    return;
-  }
-  hero.style.display='';
-  hero.className='hero card';
-  hero.innerHTML=normalHeroHtmlV52();
-  bindHeroButtonsV52();
-  const st=stats();
-  const setTxt=(sel,val)=>{const el=document.querySelector(sel);if(el)el.textContent=val};
-  setTxt('#playerNameDisplay',state.playerName||'じいさん');
-  setTxt('#hpStat',st.hp);setTxt('#atkStat',st.atk);setTxt('#defStat',st.def);setTxt('#spdStat',st.spd);
-  setTxt('#critStat',st.crit+'%');setTxt('#evaStat',st.eva+'%');setTxt('#lifestealStat',Math.round((st.lifesteal||0)*100)+'%');
-}
-function switchTab(tab,btn){
-  const doSwitch=()=>{
-    document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));
-    if(btn)btn.classList.add('active');
-    const panel=document.querySelector('#'+tab);if(panel)panel.classList.add('active');
-    setHeroAreaForTabV562(tab);
-    if(tab==='forge'){playBgm(forgeBgm);renderForge();}
-    else if(tab==='gacha'){playBgm(titleBgm);renderSkills();}
-    else if(tab==='battle'){
-      playBgm(battleBgm);
-      const mf=document.querySelector('#maxFloor'),sf=document.querySelector('#selectedFloor');
-      if(mf)mf.textContent=state.maxFloor;if(sf)sf.textContent=state.selectedFloor;
-    }else{playBgm(menuBgm);renderEquip();}
-    save();
-  };
-  const labels={gacha:'ショップ',forge:'鍛冶屋',battle:'魔王城'};
-  if(labels[tab])transitionToV52(labels[tab],doSwitch);else doSwitch();
-}
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab,b));
-
-/* ===== Ver.5.6.3 overrides ===== */
-function playCastleButtonSEV563(){
-  try{
-    if(!castleButtonSe)return;
-    castleButtonSe.pause();castleButtonSe.currentTime=0;
-    const p=castleButtonSe.play();if(p&&p.catch)p.catch(()=>{});
-  }catch(e){}
-}
-function playBattleIntroV563(done){
-  let ov=document.querySelector('#battleIntroV563');
-  if(!ov){
-    ov=document.createElement('div');
-    ov.id='battleIntroV563';
-    ov.innerHTML='<div class="sword-v563 sword-left-v563">⚔️</div><div class="sword-v563 sword-right-v563">⚔️</div><div class="sword-center-v563">⚔️</div>';
-    document.body.appendChild(ov);
-  }
-  ov.classList.remove('active','hit');void ov.offsetWidth;ov.classList.add('active');
-  setTimeout(()=>{ov.classList.add('hit');try{clashSe.currentTime=0;const p=clashSe.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}},150);
-  setTimeout(()=>{ov.classList.remove('active','hit');if(done)done()},390);
-}
-document.querySelectorAll('.tab').forEach(b=>{
-  b.onclick=(ev)=>{
-    if(b.dataset.tab==='battle'){
-      try{ev.stopPropagation()}catch(e){}
-      playCastleButtonSEV563();
-    }
-    switchTab(b.dataset.tab,b);
-  };
-});
-const startBattleBtnV563=document.querySelector('#startBattle');
-if(startBattleBtnV563){
-  startBattleBtnV563.onclick=()=>{
-    if(startBattleBtnV563.disabled)return;
-    startBattleBtnV563.disabled=true;
-    playBattleIntroV563(()=>{
-      startBattleBtnV563.disabled=false;
-      try{if(typeof startBattle==='function')startBattle()}catch(e){console.error(e)}
-    });
-  };
-}
-function renderBattleGrandpaFaceOnlyV563(){
-  const el=document.querySelector('#playerAvatar');
-  if(el)el.innerHTML='<span class="battle-grandpa-face-v563">👴</span>';
-}
-if(typeof renderBattle==='function'){
-  const oldRenderBattleV563=renderBattle;
-  renderBattle=function(){
-    const r=oldRenderBattleV563.apply(this,arguments);
-    renderBattleGrandpaFaceOnlyV563();
-    return r;
-  };
+function currentStatsClean(){
+  return stats();
 }
 
-/* ===== Ver.5.6.4 final overrides ===== */
-function showGrandpaStatusCardV564(){
+/* ---------- Grandpa status: Equipment screen only ---------- */
+function renderGrandpaStatusClean(){
   const hero=document.querySelector('.hero');
   if(!hero)return;
   hero.style.display='';
-  hero.className='hero card';
+  hero.className='hero card grandpa-status-card-clean';
   hero.innerHTML=`
-    <div class="grandpa-status-face">👴</div>
-    <div class="hero-content">
-      <div class="hero-name" id="playerNameDisplay">${state.playerName||'じいさん'}</div>
-      <div class="stats-grid">
-        <div><span>HP</span><b id="hpStat"></b></div>
-        <div><span>攻撃</span><b id="atkStat"></b></div>
-        <div><span>防御</span><b id="defStat"></b></div>
-        <div><span>速度</span><b id="spdStat"></b></div>
-        <div><span>会心</span><b id="critStat"></b></div>
-        <div><span>回避</span><b id="evaStat"></b></div>
-        <div><span>HP吸収</span><b id="lifestealStat"></b></div>
-      </div>
-      <div class="hero-bottom-actions">
-        <button id="statusDetailBtn">ステータス詳細</button>
-        <button id="statusHelpBtn">ヘルプ</button>
-        <button id="learnedSkillsBtn">スキル</button>
-      </div>
-    </div>`;
-  const st=stats();
-  const put=(sel,val)=>{const el=document.querySelector(sel);if(el)el.textContent=val};
-  put('#hpStat',st.hp);put('#atkStat',st.atk);put('#defStat',st.def);put('#spdStat',st.spd);
-  put('#critStat',st.crit+'%');put('#evaStat',st.eva+'%');
-  put('#lifestealStat',Math.round((st.lifesteal||0)*100)+'%');
-  bindHeroButtonsV52();
-}
-
-function playBattleIntroV563(done){
-  let ov=document.querySelector('#battleIntroV563');
-  if(!ov){
-    ov=document.createElement('div');
-    ov.id='battleIntroV563';
-    document.body.appendChild(ov);
-  }
-  ov.innerHTML='<div class="sword-center-v564">⚔️</div>';
-  ov.classList.remove('active','hit');void ov.offsetWidth;ov.classList.add('active','hit');
-  try{
-    if(clashSe){
-      clashSe.pause();clashSe.currentTime=0;
-      const p=clashSe.play();if(p&&p.catch)p.catch(()=>{});
-    }
-  }catch(e){}
-  setTimeout(()=>{ov.classList.remove('active','hit');if(done)done()},220);
-}
-
-function setHeroAreaForTabV562(tab){
-  const hero=document.querySelector('.hero');
-  if(!hero)return;
-  if(tab==='gacha'){
-    hero.style.display='';
-    hero.className='hero card shop-hero';
-    hero.innerHTML='<div class="shop-face">👱‍♀️</div><div class="smith-speech">いらっしゃいませ</div>';
-    return;
-  }
-  if(tab==='forge'){
-    hero.style.display='';
-    hero.className='hero card forge-hero';
-    hero.innerHTML='<div class="smith-face">🧔‍♂️</div><div class="smith-speech">いらっしゃい</div>';
-    return;
-  }
-  if(tab==='battle'){
-    hero.style.display='none';
-    return;
-  }
-  showGrandpaStatusCardV564();
-}
-
-function switchTab(tab,btn){
-  const doSwitch=()=>{
-    document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));
-    if(btn)btn.classList.add('active');
-    const panel=document.querySelector('#'+tab);
-    if(panel)panel.classList.add('active');
-    setHeroAreaForTabV562(tab);
-    if(tab==='forge'){playBgm(forgeBgm);renderForge();}
-    else if(tab==='gacha'){playBgm(titleBgm);renderSkills();}
-    else if(tab==='battle'){
-      playBgm(battleBgm);
-      const mf=document.querySelector('#maxFloor'),sf=document.querySelector('#selectedFloor');
-      if(mf)mf.textContent=state.maxFloor;if(sf)sf.textContent=state.selectedFloor;
-    }else{playBgm(menuBgm);renderEquip();}
-    save();
-  };
-  const labels={gacha:'ショップ',forge:'鍛冶屋',battle:'魔王城'};
-  if(labels[tab])transitionToV52(labels[tab],doSwitch);else doSwitch();
-}
-
-document.querySelectorAll('.tab').forEach(b=>{
-  b.onclick=(ev)=>{
-    if(b.dataset.tab==='battle'){
-      try{ev.stopPropagation()}catch(e){}
-      playCastleButtonSEV563();
-    }
-    switchTab(b.dataset.tab,b);
-  };
-});
-
-
-/* ===== Ver.5.6.5 separate merchant windows ===== */
-function updateGrandpaStatusV565(){
- const hero=document.querySelector('.hero');if(!hero)return;
- hero.style.display='';hero.className='hero card';
- hero.innerHTML=`<div class="grandpa-status-face">👴</div><div class="hero-content"><div class="hero-name" id="playerNameDisplay">${state.playerName||'じいさん'}</div><div class="stats-grid"><div><span>HP</span><b id="hpStat"></b></div><div><span>攻撃</span><b id="atkStat"></b></div><div><span>防御</span><b id="defStat"></b></div><div><span>速度</span><b id="spdStat"></b></div><div><span>会心</span><b id="critStat"></b></div><div><span>回避</span><b id="evaStat"></b></div><div><span>HP吸収</span><b id="lifestealStat"></b></div></div><div class="hero-bottom-actions"><button id="statusDetailBtn">ステータス詳細</button><button id="statusHelpBtn">ヘルプ</button><button id="learnedSkillsBtn">スキル</button></div></div>`;
- const st=stats(),put=(s,v)=>{const e=document.querySelector(s);if(e)e.textContent=v};
- put('#hpStat',st.hp);put('#atkStat',st.atk);put('#defStat',st.def);put('#spdStat',st.spd);put('#critStat',st.crit+'%');put('#evaStat',st.eva+'%');put('#lifestealStat',Math.round((st.lifesteal||0)*100)+'%');bindHeroButtonsV52();
-}
-function setTopCardsForTabV565(tab){
- const hero=document.querySelector('.hero'),shop=document.querySelector('#shopMerchantCard'),forge=document.querySelector('#forgeMerchantCard');
- if(hero)hero.style.display='none';if(shop)shop.classList.add('hidden');if(forge)forge.classList.add('hidden');
- if(tab==='equip'){if(hero){hero.style.display='';updateGrandpaStatusV565();}}
- else if(tab==='gacha'){if(shop)shop.classList.remove('hidden');}
- else if(tab==='forge'){if(forge)forge.classList.remove('hidden');}
-}
-function switchTab(tab,btn){
- const doSwitch=()=>{document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));if(btn)btn.classList.add('active');const panel=document.querySelector('#'+tab);if(panel)panel.classList.add('active');setTopCardsForTabV565(tab);if(tab==='forge'){playBgm(forgeBgm);renderForge();}else if(tab==='gacha'){playBgm(titleBgm);renderSkills();}else if(tab==='battle'){playBgm(battleBgm);const mf=document.querySelector('#maxFloor'),sf=document.querySelector('#selectedFloor');if(mf)mf.textContent=state.maxFloor;if(sf)sf.textContent=state.selectedFloor;}else{playBgm(menuBgm);renderEquip();updateGrandpaStatusV565();}save();};
- const labels={gacha:'ショップ',forge:'鍛冶屋',battle:'魔王城'};if(labels[tab])transitionToV52(labels[tab],doSwitch);else doSwitch();
-}
-document.querySelectorAll('.tab').forEach(b=>{b.onclick=(ev)=>{if(b.dataset.tab==='battle'){try{ev.stopPropagation()}catch(e){}playCastleButtonSEV563();}switchTab(b.dataset.tab,b);};});
-setTimeout(()=>setTopCardsForTabV565('equip'),0);
-
-/* ===== Ver.5.6.6: status window only on Equipment screen ===== */
-function renderGrandpaStatusCardV566(){
-  const hero=document.querySelector('.hero');
-  if(!hero)return;
-
-  hero.style.display='';
-  hero.className='hero card grandpa-status-card-v566';
-  hero.innerHTML=`
-    <div class="grandpa-status-main-v566">
-      <div class="grandpa-status-face-v566">👴</div>
-      <div class="grandpa-status-body-v566">
-        <div class="grandpa-name-v566" id="playerNameDisplay">${state.playerName||'じいさん'}</div>
-        <div class="grandpa-stats-v566">
+    <div class="grandpa-status-main-clean">
+      <div class="grandpa-face-clean">👴</div>
+      <div class="grandpa-status-body-clean">
+        <div class="grandpa-name-clean" id="playerNameDisplay">${state.playerName||'じいさん'}</div>
+        <div class="grandpa-stats-clean">
           <div><span>HP</span><b id="hpStat"></b></div>
           <div><span>攻撃</span><b id="atkStat"></b></div>
           <div><span>防御</span><b id="defStat"></b></div>
@@ -519,204 +132,210 @@ function renderGrandpaStatusCardV566(){
         </div>
       </div>
     </div>
-    <div class="grandpa-status-actions-v566">
+    <div class="grandpa-status-actions-clean">
       <button id="statusDetailBtn">ステータス詳細</button>
       <button id="statusHelpBtn">ヘルプ</button>
       <button id="learnedSkillsBtn">スキル</button>
     </div>`;
-
-  const st=stats();
-  const put=(sel,val)=>{const el=document.querySelector(sel);if(el)el.textContent=val};
-  put('#hpStat',st.hp);
-  put('#atkStat',st.atk);
-  put('#defStat',st.def);
-  put('#spdStat',st.spd);
-  put('#critStat',st.crit+'%');
-  put('#evaStat',st.eva+'%');
-  put('#lifestealStat',Math.round((st.lifesteal||0)*100)+'%');
-  bindHeroButtonsV52();
+  const s=currentStatsClean();
+  safeText('#hpStat',s.hp);
+  safeText('#atkStat',s.atk);
+  safeText('#defStat',s.def);
+  safeText('#spdStat',s.spd);
+  safeText('#critStat',s.crit+'%');
+  safeText('#evaStat',s.eva+'%');
+  safeText('#lifestealStat',Math.round((s.lifesteal||0)*100)+'%');
+  if(typeof bindHeroButtonsV52==='function')bindHeroButtonsV52();
 }
 
-function setTopAreaForTabV566(tab){
-  const hero=document.querySelector('.hero');
-  const shop=document.querySelector('#shopMerchantCard');
-  const forge=document.querySelector('#forgeMerchantCard');
-
-  if(shop)shop.remove();
-  if(forge)forge.remove();
-
-  if(!hero)return;
-
-  if(tab==='equip'){
-    renderGrandpaStatusCardV566();
-  }else{
-    hero.style.display='none';
-  }
-}
-
+/* ---------- Screen switching: one implementation only ---------- */
 function switchTab(tab,btn){
-  const doSwitch=()=>{
+  const apply=()=>{
     document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));
     if(btn)btn.classList.add('active');
-
     const panel=document.querySelector('#'+tab);
     if(panel)panel.classList.add('active');
 
-    setTopAreaForTabV566(tab);
+    const hero=document.querySelector('.hero');
+    if(hero){
+      if(tab==='equip')renderGrandpaStatusClean();
+      else hero.style.display='none';
+    }
 
-    if(tab==='forge'){
-      playBgm(forgeBgm);
-      renderForge();
-    }else if(tab==='gacha'){
-      playBgm(titleBgm);
-      renderSkills();
-    }else if(tab==='battle'){
-      playBgm(battleBgm);
-      const mf=document.querySelector('#maxFloor');
-      const sf=document.querySelector('#selectedFloor');
-      if(mf)mf.textContent=state.maxFloor;
-      if(sf)sf.textContent=state.selectedFloor;
-    }else{
+    if(tab==='equip'){
       playBgm(menuBgm);
       renderEquip();
-      renderGrandpaStatusCardV566();
+      renderGrandpaStatusClean();
+    }else if(tab==='gacha'){
+      playBgm(titleBgm);
+      renderSkillsClean();
+    }else if(tab==='forge'){
+      playBgm(forgeBgm);
+      renderForge();
+    }else if(tab==='battle'){
+      playBgm(battleBgm);
+      safeText('#maxFloor',state.maxFloor);
+      safeText('#selectedFloor',state.selectedFloor);
     }
     save();
   };
 
-  const labels={gacha:'ショップ',forge:'鍛冶屋',battle:'魔王城'};
-  if(labels[tab])transitionToV52(labels[tab],doSwitch);
-  else doSwitch();
-}
-
-document.querySelectorAll('.tab').forEach(b=>{
-  b.onclick=(ev)=>{
-    if(b.dataset.tab==='battle'){
-      try{ev.stopPropagation()}catch(e){}
-      if(typeof playCastleButtonSEV563==='function')playCastleButtonSEV563();
-    }
-    switchTab(b.dataset.tab,b);
-  };
-});
-
-setTimeout(()=>{
-  const active=document.querySelector('.panel.active');
-  setTopAreaForTabV566(active?active.id:'equip');
-},0);
-
-/* ===== Ver.5.6.7: shop skill result cleanup ===== */
-function cleanShopSkillButtonsV567(){
-  const shop=document.querySelector('#gacha');
-  if(!shop)return;
-  shop.querySelectorAll('[data-skill-equip], .skill-equip-btn, .equipped-btn').forEach(el=>el.remove());
-}
-function showSkillPurchaseResultV567(name,desc,level){
-  const box=document.querySelector('#skillResult') || document.querySelector('#skillGachaResult') || document.querySelector('#skillResultBox');
-  if(!box)return;
-  box.innerHTML=`<div class="skill-purchase-result-v567">
-    <div class="skill-purchase-label-v567">習得したスキル</div>
-    <div class="skill-purchase-name-v567">${name}${level>1?` Lv.${level}`:''}</div>
-    <div class="skill-purchase-effect-v567">${desc||'パッシブスキル'}</div>
-  </div>`;
-}
-if(typeof renderSkills==='function'){
-  const oldRenderSkillsV567=renderSkills;
-  renderSkills=function(){
-    const r=oldRenderSkillsV567.apply(this,arguments);
-    cleanShopSkillButtonsV567();
-    return r;
-  };
-}
-
-/* ===== Ver.5.6.8: correct menu placement + skill result destination ===== */
-
-function getSkillCatalogV568(name){
-  if(typeof SKILLS!=='undefined'){
-    if(SKILLS[name]) return SKILLS[name];
-    if(Array.isArray(SKILLS)){
-      const found=SKILLS.find(x=>x && (x.name===name || x.id===name));
-      if(found)return found;
-    }
+  const label={gacha:'ショップ',forge:'鍛冶屋',battle:'魔王城'}[tab];
+  if(label && typeof transitionToV52==='function'){
+    transitionToV52(label,apply);
+  }else{
+    apply();
   }
+}
+
+/* ---------- Tabs: dedicated Demon Castle SE ---------- */
+function bindTabsClean(){
+  document.querySelectorAll('.tab').forEach(b=>{
+    b.onclick=(ev)=>{
+      if(b.dataset.tab==='battle' && typeof playCastleButtonSEV563==='function'){
+        try{ev.stopPropagation()}catch(e){}
+        playCastleButtonSEV563();
+      }
+      switchTab(b.dataset.tab,b);
+    };
+  });
+}
+
+/* ---------- Skill shop: clean result-only UI ---------- */
+function getSkillDefClean(name){
+  if(typeof SKILLS==='undefined')return null;
+  if(SKILLS && !Array.isArray(SKILLS) && SKILLS[name])return SKILLS[name];
+  if(Array.isArray(SKILLS))return SKILLS.find(x=>x&&(x.name===name||x.id===name))||null;
   return null;
 }
-
-function cleanSkillLearningAreaV568(){
+function renderSkillLearnResultClean(name,level){
+  const box=document.querySelector('#skillLearnResultClean');
+  if(!box)return;
+  const sk=getSkillDefClean(name);
+  const desc=sk&&(sk.desc||sk.effect)?(sk.desc||sk.effect):'パッシブスキル';
+  box.classList.remove('hidden');
+  box.innerHTML=`
+    <div class="skill-learn-label-clean">習得したスキル</div>
+    <div class="skill-learn-name-clean">${name}${level>1?` Lv.${level}`:''}</div>
+    <div class="skill-learn-effect-clean">${desc}</div>`;
+}
+function clearLegacySkillUiClean(){
   const shop=document.querySelector('#gacha');
   if(!shop)return;
 
-  /* Remove any skill equip/equipped buttons from the shop screen. */
-  shop.querySelectorAll('[data-skill-equip], .skill-equip-btn, .equipped-btn').forEach(el=>el.remove());
+  /* never show skill equip/equipped controls in the shop */
+  shop.querySelectorAll('[data-skill-equip],.skill-equip-btn,.equipped-btn').forEach(el=>el.remove());
 
-  /* Remove legacy learned-skill rows/cards from the skill section. */
-  shop.querySelectorAll('.skill-row, .skill-card').forEach(row=>{
-    if(!row.closest('#skillLearnResultV568')) row.remove();
-  });
-
-  /* Remove stray skill result text from the equipment-purchase card. */
-  const gearArea = shop.querySelector('#gearResult, #slotResult, #gachaResult, .gear-result, .slot-result');
-  if(gearArea){
-    const txt=gearArea.textContent||'';
-    if(txt.includes('スキル') || txt.includes('Lv.')){
-      gearArea.innerHTML='';
-    }
+  /* clear accidental skill text from the equipment purchase result */
+  const gearResult=document.querySelector('#gachaResult');
+  if(gearResult && /スキル|Lv\./.test(gearResult.textContent||'')){
+    gearResult.innerHTML='';
   }
+
+  /* remove old learned-skill list rows generated by legacy renderSkills */
+  shop.querySelectorAll('.skill-row,.skill-card').forEach(el=>{
+    if(!el.closest('#skillLearnResultClean'))el.remove();
+  });
+}
+function renderSkillsClean(){
+  /* keep the skill purchase card static and remove legacy inventory/equip rows */
+  clearLegacySkillUiClean();
 }
 
-function showSkillLearnResultV568(name, level){
-  const box=document.querySelector('#skillLearnResultV568');
-  if(!box)return;
-
-  const sk=getSkillCatalogV568(name);
-  const desc=(sk && (sk.desc||sk.effect)) ? (sk.desc||sk.effect) : 'パッシブスキル';
-
-  box.classList.remove('hidden');
-  box.innerHTML=`
-    <div class="skill-learn-result-title-v568">習得したスキル</div>
-    <div class="skill-learn-result-name-v568">${name}${level>1?` Lv.${level}`:''}</div>
-    <div class="skill-learn-result-effect-v568">${desc}</div>
-  `;
-}
-
-/* Observe skill purchases by wrapping the purchase handler. */
-(function installSkillPurchaseHookV568(){
-  const btn =
-    document.querySelector('#buySkill') ||
-    document.querySelector('#skillGacha') ||
-    document.querySelector('#skillBuy') ||
+/* Wrap the skill purchase button once. */
+function bindSkillPurchaseClean(){
+  const btn=
+    document.querySelector('#buySkill')||
+    document.querySelector('#skillGacha')||
+    document.querySelector('#skillBuy')||
     Array.from(document.querySelectorAll('#gacha button')).find(b=>(b.textContent||'').includes('スキル習得'));
 
-  if(!btn)return;
+  if(!btn || btn.dataset.cleanBound==='1')return;
+  btn.dataset.cleanBound='1';
 
-  const oldHandler=btn.onclick;
+  const old=btn.onclick;
   btn.onclick=function(ev){
-    const before=Object.assign({}, state.skills||{});
-    const result = oldHandler ? oldHandler.call(this,ev) : undefined;
+    const before=Object.assign({},state.skills||{});
+    const r=old?old.call(this,ev):undefined;
 
     setTimeout(()=>{
       const after=state.skills||{};
-      let gained=null, lvl=1;
+      let gained=null,level=1;
       Object.keys(after).forEach(name=>{
         if((after[name]||0)>(before[name]||0)){
           gained=name;
-          lvl=after[name];
+          level=after[name];
         }
       });
+      clearLegacySkillUiClean();
+      if(gained)renderSkillLearnResultClean(gained,level);
+    },30);
 
-      cleanSkillLearningAreaV568();
-      if(gained)showSkillLearnResultV568(gained,lvl);
-    },50);
-
-    return result;
-  };
-})();
-
-/* Clean the skill area whenever shop is rendered/opened. */
-if(typeof renderSkills==='function'){
-  const oldRenderSkillsV568=renderSkills;
-  renderSkills=function(){
-    const r=oldRenderSkillsV568.apply(this,arguments);
-    setTimeout(cleanSkillLearningAreaV568,0);
     return r;
   };
 }
+
+/* ---------- Battle intro: central crossed swords only ---------- */
+function playBattleIntroV563(done){
+  let ov=document.querySelector('#battleIntroV563');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='battleIntroV563';
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML='<div class="sword-center-clean">⚔️</div>';
+  ov.classList.remove('active','hit');
+  void ov.offsetWidth;
+  ov.classList.add('active','hit');
+
+  try{
+    if(clashSe){
+      clashSe.pause();
+      clashSe.currentTime=0;
+      const p=clashSe.play();
+      if(p&&p.catch)p.catch(()=>{});
+    }
+  }catch(e){}
+
+  setTimeout(()=>{
+    ov.classList.remove('active','hit');
+    if(done)done();
+  },220);
+}
+
+/* Battle avatar: face only. */
+function renderBattleGrandpaFaceOnlyClean(){
+  const el=document.querySelector('#playerAvatar');
+  if(el)el.innerHTML='<span class="battle-grandpa-face-clean">👴</span>';
+}
+if(typeof renderBattle==='function'){
+  const _renderBattleBaseClean=renderBattle;
+  renderBattle=function(){
+    const r=_renderBattleBaseClean.apply(this,arguments);
+    renderBattleGrandpaFaceOnlyClean();
+    return r;
+  };
+}
+
+/* ---------- Startup ---------- */
+function initCleanBuild(){
+  bindTabsClean();
+  bindSkillPurchaseClean();
+
+  const active=document.querySelector('.panel.active');
+  const id=active?active.id:'equip';
+  const activeBtn=document.querySelector(`.tab[data-tab="${id}"]`);
+
+  if(id==='equip'){
+    renderGrandpaStatusClean();
+    renderEquip();
+  }else if(id==='gacha'){
+    const hero=document.querySelector('.hero');if(hero)hero.style.display='none';
+    renderSkillsClean();
+  }else if(id==='forge'){
+    const hero=document.querySelector('.hero');if(hero)hero.style.display='none';
+  }else if(id==='battle'){
+    const hero=document.querySelector('.hero');if(hero)hero.style.display='none';
+  }
+}
+setTimeout(initCleanBuild,0);

@@ -93,97 +93,29 @@
 .merchant-card{display:flex;align-items:center;gap:24px;min-height:150px;padding:24px;margin-bottom:18px}.merchant-card.hidden{display:none!important}.merchant-face{font-size:78px;line-height:1;flex:0 0 auto}.merchant-speech{position:relative;background:#fff;color:#17120f;border-radius:24px;padding:18px 26px;font-weight:800;font-size:22px;flex:1;text-align:center}.merchant-speech:before{content:"";position:absolute;left:50%;top:-14px;transform:translateX(-50%);border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:16px solid #fff}
 
 
-/* ===== Ver.5.6.6 grandpa status card ===== */
-.grandpa-status-card-v566{
-  padding:22px;
-  display:block;
-}
-.grandpa-status-main-v566{
-  display:flex;
-  align-items:center;
-  gap:20px;
-}
-.grandpa-status-face-v566{
-  font-size:78px;
-  line-height:1;
-  flex:0 0 auto;
-}
-.grandpa-status-body-v566{
-  flex:1;
-  min-width:0;
-}
-.grandpa-name-v566{
-  font-size:28px;
-  font-weight:800;
-  margin-bottom:14px;
-}
-.grandpa-stats-v566{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px 14px;
-}
-.grandpa-stats-v566>div{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  padding:8px 10px;
-  border-radius:12px;
-  background:rgba(255,255,255,.04);
-}
-.grandpa-stats-v566 span{
-  opacity:.72;
-  font-size:14px;
-}
-.grandpa-stats-v566 b{
-  font-size:17px;
-}
-.grandpa-status-actions-v566{
-  display:grid;
-  grid-template-columns:1.4fr 1fr 1fr;
-  gap:10px;
-  margin-top:16px;
-}
-.grandpa-status-actions-v566 button{
-  min-height:46px;
-}
-@media(max-width:520px){
-  .grandpa-status-main-v566{align-items:flex-start}
-  .grandpa-status-face-v566{font-size:68px}
-  .grandpa-name-v566{font-size:24px}
-  .grandpa-status-actions-v566{grid-template-columns:1fr 1fr 1fr}
-}
 
-.tabs{margin-bottom:18px}
-.skill-purchase-result-v567{margin-top:18px;padding:18px;border-radius:18px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08)}
-.skill-purchase-label-v567{font-size:13px;opacity:.62;margin-bottom:7px}
-.skill-purchase-name-v567{font-size:24px;font-weight:800;margin-bottom:8px}
-.skill-purchase-effect-v567{font-size:16px;line-height:1.6;opacity:.86}
 
-/* ===== Ver.5.6.8 layout + skill result ===== */
-.tabs{order:0}
-.hero{order:1}
-
-.skill-learn-result-v568{
-  margin-top:16px;
-  padding:16px 18px;
-  border-radius:16px;
-  background:rgba(255,255,255,.045);
-  border:1px solid rgba(255,255,255,.08);
-}
-.skill-learn-result-v568.hidden{display:none}
-.skill-learn-result-title-v568{
-  font-size:13px;
-  opacity:.62;
-  margin-bottom:6px;
-}
-.skill-learn-result-name-v568{
-  font-size:23px;
-  font-weight:800;
-  margin-bottom:7px;
-}
-.skill-learn-result-effect-v568{
-  font-size:16px;
-  line-height:1.55;
-  opacity:.88;
-}
+/* ===== CLEAN BUILD 5.6.9 ===== */
+.tabs{margin:0 0 18px}
+.grandpa-status-card-clean{padding:22px;display:block}
+.grandpa-status-main-clean{display:flex;align-items:flex-start;gap:22px}
+.grandpa-face-clean{font-size:80px;line-height:1;flex:0 0 auto}
+.grandpa-status-body-clean{flex:1;min-width:0}
+.grandpa-name-clean{font-size:28px;font-weight:800;margin-bottom:14px}
+.grandpa-stats-clean{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}
+.grandpa-stats-clean>div{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.045)}
+.grandpa-stats-clean span{opacity:.68}
+.grandpa-stats-clean b{font-size:18px}
+.grandpa-status-actions-clean{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:10px;margin-top:16px}
+.grandpa-status-actions-clean button{min-height:48px}
+.skill-learn-result-clean{margin-top:16px;padding:16px 18px;border-radius:16px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08)}
+.skill-learn-result-clean.hidden{display:none}
+.skill-learn-label-clean{font-size:13px;opacity:.62;margin-bottom:6px}
+.skill-learn-name-clean{font-size:23px;font-weight:800;margin-bottom:7px}
+.skill-learn-effect-clean{font-size:16px;line-height:1.55;opacity:.88}
+#battleIntroV563{position:fixed;inset:0;z-index:99999;pointer-events:none;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.08)}
+#battleIntroV563.active{display:flex}
+.sword-center-clean{font-size:92px;line-height:1;opacity:0;transform:scale(.7)}
+#battleIntroV563.hit .sword-center-clean{animation:swordCenterClean .20s ease-out forwards}
+@keyframes swordCenterClean{0%{opacity:0;transform:scale(.7)}35%{opacity:1;transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
+.battle-grandpa-face-clean{font-size:72px;line-height:1;display:inline-block}
