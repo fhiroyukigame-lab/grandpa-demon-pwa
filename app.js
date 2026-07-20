@@ -542,12 +542,23 @@ async function startQrScannerClean(){
   try{
     if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('この環境ではカメラを利用できません');
     if(typeof jsQR!=='function')throw new Error('QR解析ライブラリを読み込めませんでした');
-    qrStreamClean=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});
+    try{
+      qrStreamClean=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});
+    }catch(cameraErr){
+      qrStreamClean=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+    }
     v.srcObject=qrStreamClean;await v.play();if(status)status.textContent='QRコードを画面中央に映してください';
     const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});let lastScan=0;
     const scan=(ts)=>{if(!qrStreamClean)return;if(ts-lastScan>=100){lastScan=ts;try{if(v.readyState>=2&&v.videoWidth&&v.videoHeight){const maxWidth=720,scale=Math.min(1,maxWidth/v.videoWidth);canvas.width=Math.max(1,Math.round(v.videoWidth*scale));canvas.height=Math.max(1,Math.round(v.videoHeight*scale));ctx.drawImage(v,0,0,canvas.width,canvas.height);const img=ctx.getImageData(0,0,canvas.width,canvas.height);const code=jsQR(img.data,img.width,img.height,{inversionAttempts:'attemptBoth'});if(code&&code.data){const raw=code.data;stopQrScannerClean();showQrCharacterResultClean(qrCharacterFromTextClean(raw));return;}}}catch(e){}}qrScanTimerClean=requestAnimationFrame(scan);};
     qrScanTimerClean=requestAnimationFrame(scan);
-  }catch(e){if(status)status.textContent=e.message||'QRコードを読み取れませんでした';}
+  }catch(e){
+    console.error('QR scanner error:',e);
+    if(status){
+      if(e&&e.name==='NotAllowedError')status.textContent='カメラの使用が許可されていません。Safariのサイト設定でカメラを許可してください。';
+      else if(e&&e.name==='NotFoundError')status.textContent='利用できるカメラが見つかりませんでした。';
+      else status.textContent=(e&&e.message)||'カメラを起動できませんでした。';
+    }
+  }
 }
 function bindQrUiClean(){const o=document.querySelector('#qrGenerateBtn'),c=document.querySelector('#qrScannerClose');if(o)o.onclick=startQrScannerClean;if(c)c.onclick=stopQrScannerClean;}
 const baseStatsFunction574=stats;stats=function(){const s=baseStatsFunction574(),q=state&&state.qrBaseStats;if(!q)return s;s.hp+=(q.hp-100);s.atk+=(q.atk-10);s.def+=(q.def-5);s.spd+=(q.spd-50);s.crit+=(q.crit-5);s.eva+=(q.eva-3);return s;};
