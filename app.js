@@ -10443,47 +10443,7 @@ function playGeneralButtonSEClean(){try{if(!buttonSe)return;buttonSe.pause();but
 
 function playCastleButtonSEClean(){try{if(!castleButtonSeClean)return;castleButtonSeClean.pause();castleButtonSeClean.currentTime=0;castleButtonSeClean.volume=1.0;const p=castleButtonSeClean.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}}
 
-function renderGrandpaStatusClean(){
-  const hero=document.querySelector('.hero');
-  if(!hero)return;
-  hero.style.display='';
-  hero.className='hero card grandpa-status-card-clean';
-  hero.innerHTML=`
-    <div class="grandpa-left-clean">
-      <div class="grandpa-name-clean" id="playerNameDisplay">${state.playerName||'じいさん'}</div>
-      <div class="grandpa-face-clean">${grandpaFaceClean()}</div>
-    </div>
-    <div class="grandpa-right-clean">
-      <div class="grandpa-stat-clean"><span>HP</span><b id="hpStat"></b></div>
-      <div class="grandpa-stat-clean"><span>攻撃</span><b id="atkStat"></b></div>
-      <div class="grandpa-stat-clean"><span>防御</span><b id="defStat"></b></div>
-      <div class="grandpa-stat-clean"><span>速度</span><b id="spdStat"></b></div>
-      <div class="grandpa-stat-clean"><span>会心</span><b id="critStat"></b></div>
-      <div class="grandpa-stat-clean"><span>回避</span><b id="evaStat"></b></div>
-      <div class="grandpa-stat-clean"><span>HP吸収</span><b id="lifestealStat"></b></div>
-    </div>
-    <div class="grandpa-actions-clean">
-      <button id="statusDetailBtn">ステータス詳細</button>
-      <button id="statusHelpBtn">ヘルプ</button>
-    </div>`;
 
-  const s=stats();
-  safeTextClean('#hpStat',s.hp);
-  safeTextClean('#atkStat',s.atk);
-  safeTextClean('#defStat',s.def);
-  safeTextClean('#spdStat',s.spd);
-  safeTextClean('#critStat',s.crit+'%');
-  safeTextClean('#evaStat',s.eva+'%');
-  safeTextClean('#lifestealStat',Math.round((s.lifesteal||0)*100)+'%');
-
-  const detail=document.querySelector('#statusDetailBtn');
-  const help=document.querySelector('#statusHelpBtn');
-  if(detail)detail.onclick=()=>{if(typeof showStatusDetailV52==='function')showStatusDetailV52()};
-  if(help)help.onclick=()=>{
-    const modal=document.querySelector('#helpModal');
-    if(modal)modal.classList.remove('hidden');
-  };
-}
 
 function forceBattleFaceClean(){
   const el=document.querySelector('#playerAvatar');
@@ -10633,60 +10593,7 @@ function availableSkillNamesClean(){if(typeof SKILLS==='undefined')return[];if(A
 function qrCharacterFromTextClean(text){const seed=hashStringClean(text),names=(typeof GRANDPA_NAMES!=='undefined'&&GRANDPA_NAMES.length?GRANDPA_NAMES:['ゲンゾウ','トラキチ','タツノスケ','ゴンゾウ']),skills=availableSkillNamesClean();return{qrHash:String(seed),playerName:names[seed%names.length],faceIndex:seededValueClean(seed,23,0,49),grandpaFaceIndex:seededValueClean(seed,29,0,3),baseStats:{hp:seededValueClean(seed,31,90,115),atk:seededValueClean(seed,37,8,13),def:seededValueClean(seed,41,4,8),spd:seededValueClean(seed,43,45,55),crit:seededValueClean(seed,47,2,7),eva:seededValueClean(seed,53,1,5)},initialSkill:skills.length?skills[seededValueClean(seed,17,0,skills.length-1)]:null};}
 
 
-function showQrCharacterResultClean(char){
-  const box=document.querySelector('#qrResultBox');
-  if(!box)return;
-  pendingQrCharacterClean=char;
 
-  const skillName=char.initialSkill||'なし';
-  let skillDesc='スキルなし';
-  try{
-    if(skillName!=='なし' && typeof SKILLS!=='undefined'){
-      let def=null;
-      if(Array.isArray(SKILLS)){
-        def=SKILLS.find(x=>x&&(x.name===skillName||x.id===skillName));
-      }else{
-        def=SKILLS[skillName]||null;
-      }
-      if(def)skillDesc=def.desc||def.effect||'パッシブスキル';
-      else skillDesc='パッシブスキル';
-    }
-  }catch(e){}
-
-  let face='👴';
-  try{
-    if(typeof GRANDPA_FACES_CLEAN!=='undefined' && GRANDPA_FACES_CLEAN.length){
-      face=GRANDPA_FACES_CLEAN[char.grandpaFaceIndex % GRANDPA_FACES_CLEAN.length];
-    }
-  }catch(e){}
-
-  box.classList.remove('hidden');
-  box.innerHTML=`
-    <div class="qr-status-card-v579">
-      <div class="qr-status-left-v579">
-        <div class="qr-status-name-v579">${char.playerName}</div>
-        <div class="qr-status-face-v579">${face}</div>
-      </div>
-      <div class="qr-status-right-v579">
-        <div class="qr-stat-line-v579"><span>HP</span><b>${char.baseStats.hp}</b></div>
-        <div class="qr-stat-line-v579"><span>攻撃</span><b>${char.baseStats.atk}</b></div>
-        <div class="qr-stat-line-v579"><span>防御</span><b>${char.baseStats.def}</b></div>
-        <div class="qr-stat-line-v579"><span>速度</span><b>${char.baseStats.spd}</b></div>
-        <div class="qr-stat-line-v579"><span>会心</span><b>${char.baseStats.crit}%</b></div>
-        <div class="qr-stat-line-v579"><span>回避</span><b>${char.baseStats.eva}%</b></div>
-      </div>
-      <div class="qr-skill-v579 qr-skill-detail-v5714">
-        <div class="qr-skill-head-v5714">
-          <span>初期スキル</span>
-          <b>${skillName}</b>
-        </div>
-        <div class="qr-skill-desc-v5714">${skillDesc}</div>
-      </div>
-      <button id="startQrGameBtn" class="title-btn qr-start-btn-v579">このじいさんでニューゲーム</button>
-    </div>`;
-  const btn=document.querySelector('#startQrGameBtn');
-  if(btn)btn.onclick=startQrNewGameClean;
-}
 
 
 function applyQrCharacterToStateClean(c){state=migrate(null);state.playerName=c.playerName;state.grandpaFaceIndex=c.grandpaFaceIndex;state.faceId=c.faceIndex;state.qrHash=c.qrHash;state.qrBaseStats=c.baseStats;state.skills={};if(c.initialSkill)state.skills[c.initialSkill]=1;}
@@ -10841,105 +10748,12 @@ const f=()=>{if(!t.classList.contains('hidden')&&a.paused){try{const p=a.play();
 t.addEventListener('pointerdown',f,{passive:true});t.addEventListener('touchstart',f,{passive:true});})();
 
 
-/* ===== v5.7.14 normalize equipment list layout ===== */
-function normalizeEquipmentListV5714(){
-  const root =
-    document.querySelector('#inventory') ||
-    document.querySelector('.inventory-list') ||
-    document.querySelector('#ownedEquipment') ||
-    document.querySelector('.owned-equipment-list');
-  if(!root)return;
-
-  root.style.display='flex';
-  root.style.flexDirection='column';
-  root.style.gap='10px';
-
-  Array.from(root.children).forEach(row=>{
-    if(!(row instanceof HTMLElement))return;
-    row.style.width='100%';
-    row.style.display='grid';
-    row.style.gridTemplateColumns='minmax(0, 1fr) auto';
-    row.style.alignItems='center';
-    row.style.gap='12px';
-
-    const btn=row.querySelector('button');
-    if(btn){
-      btn.style.justifySelf='end';
-      btn.style.minWidth='86px';
-      btn.style.width='auto';
-      btn.style.margin='0';
-    }
-  });
-}
-if(typeof renderEquip==='function'){
-  const renderEquipBaseV5714=renderEquip;
-  renderEquip=function(){
-    const r=renderEquipBaseV5714.apply(this,arguments);
-    setTimeout(normalizeEquipmentListV5714,0);
-    return r;
-  };
-}
-setTimeout(normalizeEquipmentListV5714,0);
 
 
-/* ===== v5.7.14 title BGM startup ===== */
-(function startTitleBgmImmediatelyV5714(){
-  const a=document.querySelector('#titleBgm');
-  const title=document.querySelector('#titleScreen');
-  if(!a||!title)return;
+/* ===== CLEAN BUILD 5.7.15 ===== */
 
-  const start=()=>{
-    if(title.classList.contains('hidden'))return;
-    try{
-      if(typeof audioSettingsClean!=='undefined')a.volume=audioSettingsClean.bgm;
-      else a.volume=0.7;
-      const p=a.play();
-      if(p&&p.catch)p.catch(()=>{});
-    }catch(e){}
-  };
-
-  // Try immediately.
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',start,{once:true});
-  }else{
-    start();
-  }
-
-  // iPhone/Safari fallback: first interaction unlocks audio.
-  const unlock=()=>{
-    start();
-    window.removeEventListener('pointerdown',unlock,true);
-    window.removeEventListener('touchstart',unlock,true);
-  };
-  window.addEventListener('pointerdown',unlock,true);
-  window.addEventListener('touchstart',unlock,true);
-})();
-
-
-/* ===== v5.7.14 QR/status face consistency ===== */
-function grandpaFaceFromStateV5714(){
-  try{
-    if(typeof GRANDPA_FACES_CLEAN!=='undefined' && GRANDPA_FACES_CLEAN.length){
-      const idx=(typeof state.grandpaFaceIndex==='number')?state.grandpaFaceIndex:0;
-      return GRANDPA_FACES_CLEAN[idx % GRANDPA_FACES_CLEAN.length];
-    }
-  }catch(e){}
-  return '👴';
-}
-
-/* Override face helper used by status/battle when available. */
-if(typeof grandpaFaceClean==='function'){
-  grandpaFaceClean=function(){ return grandpaFaceFromStateV5714(); };
-}
-if(typeof getGrandpaFaceForBattleV5712==='function'){
-  getGrandpaFaceForBattleV5712=function(){ return grandpaFaceFromStateV5714(); };
-}
-
-
-/* ===== v5.7.15 inventory + skill toggle + QR status sync ===== */
-
-/* ---------- QR data is the source of truth ---------- */
-function qrProfileV5715(){
+/* ---------- QR profile is the canonical source ---------- */
+function getQrProfileClean5715(){
   return {
     name: state && state.playerName ? state.playerName : 'じいさん',
     faceIndex: state && typeof state.grandpaFaceIndex==='number' ? state.grandpaFaceIndex : 0,
@@ -10947,9 +10761,9 @@ function qrProfileV5715(){
   };
 }
 
-function grandpaFaceFromStateV5715(){
+function getGrandpaFaceClean5715(){
   try{
-    const p=qrProfileV5715();
+    const p=getQrProfileClean5715();
     if(typeof GRANDPA_FACES_CLEAN!=='undefined' && GRANDPA_FACES_CLEAN.length){
       return GRANDPA_FACES_CLEAN[p.faceIndex % GRANDPA_FACES_CLEAN.length];
     }
@@ -10958,18 +10772,18 @@ function grandpaFaceFromStateV5715(){
 }
 
 if(typeof grandpaFaceClean==='function'){
-  grandpaFaceClean=function(){ return grandpaFaceFromStateV5715(); };
+  grandpaFaceClean=function(){ return getGrandpaFaceClean5715(); };
 }
 if(typeof getGrandpaFaceForBattleV5712==='function'){
-  getGrandpaFaceForBattleV5712=function(){ return grandpaFaceFromStateV5715(); };
+  getGrandpaFaceForBattleV5712=function(){ return getGrandpaFaceClean5715(); };
 }
 
-/* ---------- Rebuild status card from QR-saved profile ---------- */
+/* ---------- Status card ---------- */
 function renderGrandpaStatusClean(){
   const hero=document.querySelector('.hero');
   if(!hero)return;
 
-  const p=qrProfileV5715();
+  const p=getQrProfileClean5715();
   const s=stats();
 
   hero.style.display='';
@@ -10977,7 +10791,7 @@ function renderGrandpaStatusClean(){
   hero.innerHTML=`
     <div class="grandpa-left-clean">
       <div class="grandpa-name-clean" id="playerNameDisplay">${p.name}</div>
-      <div class="grandpa-face-clean">${grandpaFaceFromStateV5715()}</div>
+      <div class="grandpa-face-clean">${getGrandpaFaceClean5715()}</div>
     </div>
     <div class="grandpa-right-clean">
       <div class="grandpa-stat-clean"><span>HP</span><b>${s.hp}</b></div>
@@ -11002,26 +10816,29 @@ function renderGrandpaStatusClean(){
   };
 }
 
-/* ---------- Restore owned equipment list ---------- */
-function renderOwnedEquipmentV5715(){
+/* ---------- Owned equipment list ---------- */
+function getOwnedItemsClean5715(){
+  if(state && Array.isArray(state.inventory))return state.inventory;
+  if(state && Array.isArray(state.items))return state.items;
+  return [];
+}
+
+function renderOwnedEquipmentClean5715(){
   const root=
     document.querySelector('#inventory') ||
     document.querySelector('.inventory-list') ||
     document.querySelector('#ownedEquipment') ||
     document.querySelector('.owned-equipment-list');
-
   if(!root)return;
 
-  const items=(state && Array.isArray(state.inventory)) ? state.inventory :
-              (state && Array.isArray(state.items)) ? state.items : [];
-
+  const items=getOwnedItemsClean5715();
   if(!items.length){
-    root.innerHTML='<div class="inventory-empty-v5715">まだ装備を所持していません。</div>';
+    root.innerHTML='<div class="inventory-empty-clean5715">まだ装備を所持していません。</div>';
     return;
   }
 
   root.innerHTML=items.map((item,idx)=>{
-    const equipped = !!item.equipped;
+    const equipped=!!item.equipped;
     const name=item.name||'名称不明';
     const slot=item.slot||item.category||'装備';
     const statParts=[];
@@ -11030,19 +10847,19 @@ function renderOwnedEquipmentV5715(){
     if(item.hp)statParts.push(`HP+${item.hp}`);
     if(item.spd)statParts.push(`速+${item.spd}`);
     return `
-      <div class="inventory-row-v5715" data-inventory-index="${idx}">
-        <div class="inventory-main-v5715">
-          <div class="inventory-slot-v5715">${slot}</div>
-          <div class="inventory-name-v5715">${name}</div>
-          <div class="inventory-stats-v5715">${statParts.join(' / ')}</div>
+      <div class="inventory-row-clean5715" data-inventory-index="${idx}">
+        <div class="inventory-main-clean5715">
+          <div class="inventory-slot-clean5715">${slot}</div>
+          <div class="inventory-name-clean5715">${name}</div>
+          <div class="inventory-stats-clean5715">${statParts.join(' / ')}</div>
         </div>
-        <button class="inventory-equip-btn-v5715 ${equipped?'equipped':''}" data-index="${idx}">
+        <button class="inventory-equip-btn-clean5715 ${equipped?'equipped':''}" data-index="${idx}">
           ${equipped?'装備中':'装備'}
         </button>
       </div>`;
   }).join('');
 
-  root.querySelectorAll('.inventory-equip-btn-v5715').forEach(btn=>{
+  root.querySelectorAll('.inventory-equip-btn-clean5715').forEach(btn=>{
     btn.onclick=()=>{
       const idx=Number(btn.dataset.index);
       const item=items[idx];
@@ -11051,50 +10868,90 @@ function renderOwnedEquipmentV5715(){
       if(typeof equipItem==='function'){
         equipItem(idx);
       }else{
-        // Fallback: mark one equipped per slot if legacy helper is unavailable.
         items.forEach(x=>{
           if((x.slot||x.category)===(item.slot||item.category))x.equipped=false;
         });
         item.equipped=true;
         save();
       }
-
-      renderOwnedEquipmentV5715();
+      renderOwnedEquipmentClean5715();
       renderGrandpaStatusClean();
     };
   });
 }
 
-/* ---------- Fix skill toggle ---------- */
-function bindSkillToggleV5715(){
+/* ---------- Skill toggle ---------- */
+function bindSkillToggleClean5715(){
   const btn=document.querySelector('#ownedSkillsToggleV570') || document.querySelector('.owned-skills-toggle-v570');
   const content=document.querySelector('#ownedSkillsContentV570') || document.querySelector('.owned-skills-content-v570');
   const arrow=document.querySelector('#ownedSkillsArrowV570');
-
   if(!btn || !content)return;
 
   btn.onclick=()=>{
-    const isHidden=content.classList.contains('hidden') || getComputedStyle(content).display==='none';
-    if(isHidden){
-      content.classList.remove('hidden');
-      content.style.display='block';
-      if(arrow)arrow.textContent='▲';
-    }else{
-      content.classList.add('hidden');
-      content.style.display='none';
-      if(arrow)arrow.textContent='▼';
-    }
+    const hidden=content.classList.contains('hidden') || getComputedStyle(content).display==='none';
+    content.classList.toggle('hidden',!hidden);
+    content.style.display=hidden?'block':'none';
+    if(arrow)arrow.textContent=hidden?'▲':'▼';
   };
 }
 
-/* ---------- Re-apply after equipment screen render ---------- */
+/* ---------- QR result with skill description ---------- */
+function showQrCharacterResultClean(char){
+  const box=document.querySelector('#qrResultBox');
+  if(!box)return;
+  pendingQrCharacterClean=char;
+
+  const skillName=char.initialSkill||'なし';
+  let skillDesc='スキルなし';
+  try{
+    if(skillName!=='なし' && typeof SKILLS!=='undefined'){
+      let def=null;
+      if(Array.isArray(SKILLS))def=SKILLS.find(x=>x&&(x.name===skillName||x.id===skillName));
+      else def=SKILLS[skillName]||null;
+      skillDesc=def?(def.desc||def.effect||'パッシブスキル'):'パッシブスキル';
+    }
+  }catch(e){}
+
+  const face=(typeof GRANDPA_FACES_CLEAN!=='undefined'&&GRANDPA_FACES_CLEAN.length)
+    ? GRANDPA_FACES_CLEAN[char.grandpaFaceIndex%GRANDPA_FACES_CLEAN.length]
+    : '👴';
+
+  box.classList.remove('hidden');
+  box.innerHTML=`
+    <div class="qr-status-card-v579">
+      <div class="qr-status-left-v579">
+        <div class="qr-status-name-v579">${char.playerName}</div>
+        <div class="qr-status-face-v579">${face}</div>
+      </div>
+      <div class="qr-status-right-v579">
+        <div class="qr-stat-line-v579"><span>HP</span><b>${char.baseStats.hp}</b></div>
+        <div class="qr-stat-line-v579"><span>攻撃</span><b>${char.baseStats.atk}</b></div>
+        <div class="qr-stat-line-v579"><span>防御</span><b>${char.baseStats.def}</b></div>
+        <div class="qr-stat-line-v579"><span>速度</span><b>${char.baseStats.spd}</b></div>
+        <div class="qr-stat-line-v579"><span>会心</span><b>${char.baseStats.crit}%</b></div>
+        <div class="qr-stat-line-v579"><span>回避</span><b>${char.baseStats.eva}%</b></div>
+      </div>
+      <div class="qr-skill-v579 qr-skill-detail-clean5715">
+        <div class="qr-skill-head-clean5715">
+          <span>初期スキル</span>
+          <b>${skillName}</b>
+        </div>
+        <div class="qr-skill-desc-clean5715">${skillDesc}</div>
+      </div>
+      <button id="startQrGameBtn" class="title-btn qr-start-btn-v579">このじいさんでニューゲーム</button>
+    </div>`;
+  const btn=document.querySelector('#startQrGameBtn');
+  if(btn)btn.onclick=startQrNewGameClean;
+}
+
+/* ---------- Equipment screen refresh ---------- */
 if(typeof renderEquip==='function'){
-  const renderEquipBaseV5715=renderEquip;
+  const renderEquipBaseClean5715=renderEquip;
   renderEquip=function(){
-    const r=renderEquipBaseV5715.apply(this,arguments);
+    const r=renderEquipBaseClean5715.apply(this,arguments);
     setTimeout(()=>{
-      renderOwnedEquipmentV5715();
-      bindSkillToggleV5715();
+      renderOwnedEquipmentClean5715();
+      bindSkillToggleClean5715();
       renderGrandpaStatusClean();
     },0);
     return r;
@@ -11102,8 +10959,8 @@ if(typeof renderEquip==='function'){
 }
 
 setTimeout(()=>{
-  renderOwnedEquipmentV5715();
-  bindSkillToggleV5715();
+  renderOwnedEquipmentClean5715();
+  bindSkillToggleClean5715();
   const active=document.querySelector('.panel.active');
   if(active && active.id==='equip')renderGrandpaStatusClean();
 },0);

@@ -614,7 +614,9 @@
   line-height:1 !important;
 }
 
-/* ===== v5.7.14 equipment one-column list ===== */
+
+
+/* ===== CLEAN BUILD 5.7.15 ===== */
 #inventory,
 .inventory-list,
 #ownedEquipment,
@@ -625,56 +627,7 @@
   width:100% !important;
 }
 
-#inventory .item,
-#inventory .equipment-item,
-#inventory .inventory-item,
-.inventory-list .item,
-.owned-equipment-list .item{
-  width:100% !important;
-  display:grid !important;
-  grid-template-columns:minmax(0,1fr) auto !important;
-  align-items:center !important;
-  gap:12px !important;
-  padding:14px 16px !important;
-  box-sizing:border-box !important;
-}
-
-#inventory .item button,
-#inventory .equipment-item button,
-#inventory .inventory-item button,
-.inventory-list .item button,
-.owned-equipment-list .item button{
-  justify-self:end !important;
-  min-width:86px !important;
-  width:auto !important;
-  margin:0 !important;
-}
-
-#inventory .item .item-main,
-#inventory .equipment-item .item-main,
-#inventory .inventory-item .item-main{
-  min-width:0 !important;
-}
-
-.qr-skill-detail-v5714{
-  display:block !important;
-}
-.qr-skill-head-v5714{
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  align-items:center;
-}
-.qr-skill-desc-v5714{
-  margin-top:8px;
-  font-size:13px;
-  line-height:1.5;
-  opacity:.72;
-  text-align:left;
-}
-
-/* ===== v5.7.15 owned equipment list ===== */
-.inventory-row-v5715{
+.inventory-row-clean5715{
   width:100%;
   display:grid;
   grid-template-columns:minmax(0,1fr) auto;
@@ -686,20 +639,30 @@
   background:rgba(255,255,255,.035);
   border:1px solid rgba(255,255,255,.06);
 }
-.inventory-main-v5715{min-width:0}
-.inventory-slot-v5715{font-size:12px;opacity:.6;margin-bottom:3px}
-.inventory-name-v5715{font-size:18px;font-weight:800;line-height:1.25}
-.inventory-stats-v5715{font-size:13px;opacity:.72;margin-top:5px}
-.inventory-equip-btn-v5715{
+.inventory-main-clean5715{min-width:0}
+.inventory-slot-clean5715{font-size:12px;opacity:.6;margin-bottom:3px}
+.inventory-name-clean5715{font-size:18px;font-weight:800;line-height:1.25}
+.inventory-stats-clean5715{font-size:13px;opacity:.72;margin-top:5px}
+.inventory-equip-btn-clean5715{
+  justify-self:end;
   min-width:86px;
   width:auto;
   margin:0;
 }
-.inventory-equip-btn-v5715.equipped{
-  background:#2167b3;
+.inventory-equip-btn-clean5715.equipped{background:#2167b3}
+.inventory-empty-clean5715{padding:18px;text-align:center;opacity:.65}
+
+.qr-skill-detail-clean5715{display:block !important}
+.qr-skill-head-clean5715{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
 }
-.inventory-empty-v5715{
-  padding:18px;
-  text-align:center;
-  opacity:.65;
+.qr-skill-desc-clean5715{
+  margin-top:8px;
+  font-size:13px;
+  line-height:1.5;
+  opacity:.72;
+  text-align:left;
 }

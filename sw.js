@@ -1,6 +1,6 @@
-const CACHE_NAME='grandpa-demon-v5715-inventory-skill-qr-sync-20260720';
+const CACHE_NAME='grandpa-demon-v5715-clean-20260720';
 const APP_SHELL=[
-'./','./index.html','./style.css?v=5.7.15','./app.js?v=5.7.15',
+'./','./index.html','./style.css?v=5.7.15-clean','./app.js?v=5.7.15-clean',
 './manifest.webmanifest?v=5.7.12','./icon-192.png','./icon-512.png'
 ];
 self.addEventListener('install',event=>{
