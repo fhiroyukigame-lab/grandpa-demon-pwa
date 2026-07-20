@@ -666,3 +666,38 @@
   opacity:.72;
   text-align:left;
 }
+
+
+/* ===== v5.7.17 OVERWRITE CLEAN ===== */
+#ownedSkillsToggleV570{
+  display:none !important;
+}
+#ownedSkillsContentV570{
+  display:block !important;
+}
+.skill-owned-row-v5717{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin:14px 0;
+  padding:22px 24px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:18px;
+  background:rgba(255,255,255,.035);
+}
+.skill-owned-main-v5717{min-width:0}
+.skill-owned-label-v5717{
+  font-size:.82rem;
+  opacity:.62;
+  margin-bottom:8px;
+}
+.skill-owned-name-v5717{
+  font-size:1.35rem;
+  font-weight:800;
+  margin-bottom:8px;
+}
+.skill-owned-desc-v5717{
+  font-size:.95rem;
+  opacity:.78;
+  line-height:1.5;
+}

@@ -10145,7 +10145,23 @@ function playAudio(a,rate=1){if(!a)return;try{a.pause();a.currentTime=0;a.playba
 function gear(id){return state.gears.find(g=>g.id===id)}
 function addBonus(dst,src){Object.entries(src||{}).forEach(([k,v])=>dst[k]=(dst[k]||0)+v)}
 function statSummary(g){const all={...g.base};Object.entries(g.bonus||{}).forEach(([k,v])=>all[k]=(all[k]||0)+v);return [['HP','hp'],['攻','atk'],['防','def'],['速','spd'],['会心','crit'],['回避','eva']].filter(x=>all[x[1]]).map(x=>x[0]+(all[x[1]]>0?'+':'')+all[x[1]]).join(' / ')||'能力なし'}
-function stats(){const s={hp:128,atk:12,def:5,spd:50,crit:5,eva:3,lifesteal:0};Object.values(state.equipped).map(gear).forEach(g=>{if(!g)return;[g.base,g.bonus].forEach(src=>Object.entries(src||{}).forEach(([k,v])=>s[k]=(s[k]||0)+v))});return s}
+function stats(){
+  const q=(state&&state.qrBaseStats)||null;
+  const s=q
+    ? {hp:q.hp,atk:q.atk,def:q.def,spd:q.spd,crit:q.crit,eva:q.eva,lifesteal:0}
+    : {hp:128,atk:12,def:5,spd:50,crit:5,eva:3,lifesteal:0};
+
+  Object.values(state.equipped||{}).map(gear).forEach(g=>{
+    if(!g)return;
+    [g.base,g.bonus].forEach(src=>{
+      Object.entries(src||{}).forEach(([k,v])=>{
+        s[k]=(s[k]||0)+v;
+      });
+    });
+  });
+
+  return s;
+}
 function gearEmoji(slot,suffix){if(slot==='right')return suffix.includes('カタナ')?'🗡️':suffix.includes('ハンマー')?'🔨':'⚔️';if(slot==='left')return '🛡️';if(slot==='body')return '🥋';if(slot==='head')return '🎩';return ''}
 function renderGrandpa(el){if(!el)return;if(el.id==='shopGrandpa'){el.innerHTML='👴';el.classList.add('hero-face-only');return}el.innerHTML='';['body','left','right','head'].forEach(slot=>{const g=gear(state.equipped[slot]);if(!g)return;const sp=document.createElement('span');sp.className='gear-layer gear-'+(slot==='right'?'weapon':slot==='left'?'shield':'armor');sp.textContent=gearEmoji(slot,g.suffix);el.appendChild(sp)})}
 function render(){const s=stats();$('#gold').textContent=state.gold;const levelEl=$('#level');if(levelEl)levelEl.textContent=state.level||'';$('#hpStat').textContent=s.hp;$('#atkStat').textContent=s.atk;$('#defStat').textContent=s.def;$('#spdStat').textContent=s.spd;$('#critStat').textContent=s.crit+'%';$('#evaStat').textContent=s.eva+'%';$('#maxFloor').textContent=state.maxFloor;$('#selectedFloor').textContent=state.selectedFloor;renderGrandpa($('#shopGrandpa'));renderGrandpa($('#playerAvatar'));renderEquip();renderForge();renderSkills();save()}
@@ -10342,7 +10358,9 @@ function playBattleIntroV563(done){
 }
 
 /* Battle avatar: face only. */
-const GRANDPA_FACE_POOL_V570=['👴','🧓','👨‍🦳','👨‍🦲'];function grandpaFaceV570(){if(typeof state.grandpaFaceIndex!=='number'){state.grandpaFaceIndex=Math.floor(Math.random()*GRANDPA_FACE_POOL_V570.length);save()}return GRANDPA_FACE_POOL_V570[state.grandpaFaceIndex%GRANDPA_FACE_POOL_V570.length]}function renderBattleGrandpaFaceOnlyClean(){const el=document.querySelector('#playerAvatar');if(el)el.innerHTML=`<span class="battle-grandpa-face-clean">${grandpaFaceV570()}</span>`;}
+const GRANDPA_FACE_POOL_V570=['👴','🧓','👨‍🦳','👨‍🦲'];function grandpaFaceV570(){
+  return getGrandpaFaceClean5715();
+}function renderBattleGrandpaFaceOnlyClean(){const el=document.querySelector('#playerAvatar');if(el)el.innerHTML=`<span class="battle-grandpa-face-clean">${grandpaFaceV570()}</span>`;}
 if(typeof renderBattle==='function'){
   const _renderBattleBaseClean=renderBattle;
   renderBattle=function(){
@@ -10353,7 +10371,30 @@ if(typeof renderBattle==='function'){
 }
 
 /* ---------- Owned skills collapsible ---------- */
-function renderOwnedSkillsV570(){const c=$('#ownedSkillsContentV570');if(!c)return;const names=Object.keys(state.skills||{});c.innerHTML=names.length?names.map(n=>{const sk=getSkillDefClean(n);return `<div class="owned-skill-row-v570"><b>${n}${state.skills[n]>1?` Lv.${state.skills[n]}`:''}</b><div>${sk&&(sk.desc||sk.effect)?(sk.desc||sk.effect):'パッシブスキル'}</div></div>`}).join(''):'まだスキルを習得していません。';const t=$('#ownedSkillsToggleV570');if(t&&!t.dataset.bound){t.dataset.bound='1';t.onclick=()=>{const open=c.classList.contains('hidden');c.classList.toggle('hidden',!open);safeText('#ownedSkillsArrowV570',open?'▲':'▼')}}}
+function renderOwnedSkillsV570(){
+  const c=document.querySelector('#ownedSkillsContentV570');
+  const t=document.querySelector('#ownedSkillsToggleV570');
+  if(t)t.style.display='none';
+  if(!c)return;
+
+  c.classList.remove('hidden');
+  c.style.display='block';
+
+  const names=Object.keys((state&&state.skills)||{});
+  c.innerHTML=names.length
+    ? names.map(n=>{
+        const sk=getSkillDefClean(n);
+        const desc=sk&&(sk.desc||sk.effect)?(sk.desc||sk.effect):'パッシブスキル';
+        return `<div class="skill-owned-row-v5717">
+          <div class="skill-owned-main-v5717">
+            <div class="skill-owned-label-v5717">スキル</div>
+            <div class="skill-owned-name-v5717">${n}${state.skills[n]>1?` Lv.${state.skills[n]}`:''}</div>
+            <div class="skill-owned-desc-v5717">${desc}</div>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div class="inventory-empty-clean5715">まだスキルを習得していません。</div>';
+}
 /* ---------- Audio options ---------- */
 function applyAudioVolumesV570(){[titleBgm,menuBgm,battleBgm,forgeBgm].forEach(a=>{if(a)a.volume=audioSettingsV570.bgm});[hitSe,buttonSe,equipButtonSe,slotButtonSe,rouletteSe,slotResultSe,clashSe,castleButtonSe].forEach(a=>{if(a)a.volume=audioSettingsV570.se});const b=$('#bgmVolumeV570'),s=$('#seVolumeV570');if(b)b.value=Math.round(audioSettingsV570.bgm*100);if(s)s.value=Math.round(audioSettingsV570.se*100);safeText('#bgmVolumeValueV570',Math.round(audioSettingsV570.bgm*100));safeText('#seVolumeValueV570',Math.round(audioSettingsV570.se*100));}
 function bindAudioOptionsV570(){const b=$('#bgmVolumeV570'),s=$('#seVolumeV570');if(b&&!b.dataset.bound){b.dataset.bound='1';b.oninput=()=>{audioSettingsV570.bgm=+b.value/100;localStorage.setItem(AUDIO_SETTINGS_KEY_V570,JSON.stringify(audioSettingsV570));applyAudioVolumesV570()}}if(s&&!s.dataset.bound){s.dataset.bound='1';s.oninput=()=>{audioSettingsV570.se=+s.value/100;localStorage.setItem(AUDIO_SETTINGS_KEY_V570,JSON.stringify(audioSettingsV570));applyAudioVolumesV570()}}}
@@ -10618,7 +10659,24 @@ function qrCharacterFromTextClean(text){const seed=hashStringClean(text),names=(
 
 
 
-function applyQrCharacterToStateClean(c){state=migrate(null);state.playerName=c.playerName;state.grandpaFaceIndex=c.grandpaFaceIndex;state.faceId=c.faceIndex;state.qrHash=c.qrHash;state.qrBaseStats=c.baseStats;state.skills={};if(c.initialSkill)state.skills[c.initialSkill]=1;}
+function applyQrCharacterToStateClean(c){
+  state=migrate(null);
+
+  state.playerName=c.playerName;
+  state.grandpaFaceIndex=Number(c.grandpaFaceIndex)||0;
+  state.faceId=c.faceIndex;
+  state.qrHash=c.qrHash;
+  state.qrBaseStats={...c.baseStats};
+
+  state.skills={};
+  state.equippedSkills=[];
+
+  if(c.initialSkill){
+    state.skills[c.initialSkill]=1;
+  }
+
+  save();
+}
 function startQrNewGameClean(){
 if(!pendingQrCharacterClean)return;
 if(localStorage.getItem('grandpaDemonSave')&&!confirm('現在のセーブデータを消してQRじいさんでニューゲームを始めますか？'))return;
@@ -10892,24 +10950,9 @@ function renderOwnedEquipmentClean5715(){
 /* ---------- Skill toggle ---------- */
 
 function bindSkillToggleClean5715(){
-  const btn=document.querySelector('#ownedSkillsToggleV570') || document.querySelector('.owned-skills-toggle-v570');
-  const content=document.querySelector('#ownedSkillsContentV570') || document.querySelector('.owned-skills-content-v570');
-  const arrow=document.querySelector('#ownedSkillsArrowV570');
-  if(!btn || !content)return;
-
-  btn.onclick=()=>{
-    if(typeof renderOwnedSkillsV570==='function')renderOwnedSkillsV570();
-    const isHidden=content.classList.contains('hidden') || getComputedStyle(content).display==='none';
-    if(isHidden){
-      content.classList.remove('hidden');
-      content.style.display='block';
-      if(arrow)arrow.textContent='▲';
-    }else{
-      content.classList.add('hidden');
-      content.style.display='none';
-      if(arrow)arrow.textContent='▼';
-    }
-  };
+  const t=document.querySelector('#ownedSkillsToggleV570');
+  if(t)t.style.display='none';
+  renderOwnedSkillsV570();
 }
 
 

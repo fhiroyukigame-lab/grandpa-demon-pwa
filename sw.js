@@ -1,6 +1,6 @@
-const CACHE_NAME='grandpa-demon-v5716-shop-sync-castle-intro-20260720';
+const CACHE_NAME='grandpa-demon-v5717-overwrite-clean-20260720';
 const APP_SHELL=[
-'./','./index.html','./style.css?v=5.7.16','./app.js?v=5.7.16',
+'./','./index.html','./style.css?v=5.7.17-clean','./app.js?v=5.7.17-clean',
 './manifest.webmanifest?v=5.7.12','./icon-192.png','./icon-512.png'
 ];
 self.addEventListener('install',event=>{
