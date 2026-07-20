@@ -10156,7 +10156,19 @@ function openName(id){pendingGearId=id;const g=gear(id);$('#nameBaseInfo').textC
 function spinText(el,items,duration,done){let start=performance.now();const timer=setInterval(()=>{el.textContent=items[Math.floor(Math.random()*items.length)][0]},65);setTimeout(()=>{clearInterval(timer);done()},duration)}
 let gearSlotBusy=false;
 function gearGacha(){if(gearSlotBusy)return;if(state.gold<100)return alert('ゴールドが足りません');gearSlotBusy=true;state.gold-=100;save();$('#gold').textContent=state.gold;$('#gearGacha').disabled=true;$('#gachaResult').innerHTML='';$('#rouletteStatus').classList.add('active');$('#rouletteStatus').textContent='貴方に合った装備を探しています...';playAudio(slotButtonSe);setTimeout(()=>playAudio(rouletteSe),20);const adj=ADJECTIVES[Math.floor(Math.random()*ADJECTIVES.length)],noun=ABSTRACT_NOUNS[Math.floor(Math.random()*ABSTRACT_NOUNS.length)],type=GEAR_TYPES[Math.floor(Math.random()*GEAR_TYPES.length)];const ra=$('#reelAdj'),rn=$('#reelNoun'),rt=$('#reelType');spinText(ra,ADJECTIVES,650,()=>{ra.textContent=adj[0];spinText(rn,ABSTRACT_NOUNS,650,()=>{rn.textContent=noun[0];spinText(rt,GEAR_TYPES.map(x=>[x.suffix]),650,()=>{rt.textContent=type.suffix;setTimeout(()=>{const variance={};Object.entries(type.base).forEach(([k,v])=>variance[k]=Math.round(v*(.85+Math.random()*.3)));const bonus={};addBonus(bonus,adj[1]);addBonus(bonus,noun[1]);const name=adj[0]+noun[0]+'の'+type.suffix;const g={id:uid(),slot:type.slot,suffix:type.suffix,base:variance,bonus,level:0,name,locked:true,effects:[adj[2],noun[2]]};state.gears.push(g);$('#rouletteStatus').classList.remove('active');$('#rouletteStatus').textContent='';$('#gachaResult').innerHTML=`<div class="slot-result-pop">✨ <b>${name}</b>を獲得！<br><span class="item-meta">${SLOT_LABEL[g.slot]}｜${statSummary(g)}</span><div class="effect-line"><span class="effect-tag">${adj[2]}</span><span class="effect-tag">${noun[2]}</span></div></div>`;playAudio(slotResultSe);gearSlotBusy=false;$('#gearGacha').disabled=false;render()},120)})})})}
-function skillGacha(){if(state.gold<150)return alert('ゴールドが足りません');state.gold-=150;const sk=SKILLS[Math.floor(Math.random()*SKILLS.length)];state.skills[sk.name]=(state.skills[sk.name]||0)+1;renderSkillLearnResultClean(sk.name,state.skills[sk.name]);render()}function renderSkills(){const root=$('#skillList');root.innerHTML='';const names=Object.keys(state.skills);if(!names.length){root.innerHTML='<p class="item-meta">まだスキルを持っていません。</p>';return}names.forEach(name=>{const sk=SKILLS.find(x=>x.name===name),on=state.equippedSkills.includes(name);const d=document.createElement('div');d.className='skill-card';d.innerHTML=`<div><b>${name} Lv.${state.skills[name]}</b><div class="item-meta">${sk.desc}</div></div><button>${on?'装備中':'装備'}</button>`;d.querySelector('button').onclick=()=>{if(on)state.equippedSkills=state.equippedSkills.filter(x=>x!==name);else{if(state.equippedSkills.length>=3)return alert('スキルは3つまでです');state.equippedSkills.push(name)}render()};root.appendChild(d)})}
+
+function skillGacha(){
+  if(state.gold<150)return alert('ゴールドが足りません');
+  state.gold-=150;
+  const sk=SKILLS[Math.floor(Math.random()*SKILLS.length)];
+  state.skills[sk.name]=(state.skills[sk.name]||0)+1;
+  renderSkillLearnResultClean(sk.name,state.skills[sk.name]);
+  render();
+  if(typeof renderOwnedSkillsV570==='function')renderOwnedSkillsV570();
+  if(typeof bindSkillToggleClean5715==='function')bindSkillToggleClean5715();
+  save();
+}
+function renderSkills(){const root=$('#skillList');root.innerHTML='';const names=Object.keys(state.skills);if(!names.length){root.innerHTML='<p class="item-meta">まだスキルを持っていません。</p>';return}names.forEach(name=>{const sk=SKILLS.find(x=>x.name===name),on=state.equippedSkills.includes(name);const d=document.createElement('div');d.className='skill-card';d.innerHTML=`<div><b>${name} Lv.${state.skills[name]}</b><div class="item-meta">${sk.desc}</div></div><button>${on?'装備中':'装備'}</button>`;d.querySelector('button').onclick=()=>{if(on)state.equippedSkills=state.equippedSkills.filter(x=>x!==name);else{if(state.equippedSkills.length>=3)return alert('スキルは3つまでです');state.equippedSkills.push(name)}render()};root.appendChild(d)})}
 function enemyForFloor(f){if(f===30)return{name:'大魔王ヴァルガス',avatar:'😈',hp:1900,atk:82,def:30,spd:48,reward:2200,boss:true,demon:true};if(f===20)return{name:'冥界竜ネクロス',avatar:'🐲',hp:1100,atk:60,def:23,spd:44,reward:1000,boss:true};if(f===10)return{name:'獄炎将軍ガルド',avatar:'👹',hp:560,atk:40,def:16,spd:42,reward:500,boss:true};const b=ENEMIES[Math.min(ENEMIES.length-1,Math.floor((f-1)/5))],m=1+(f-1)*.13;return{...b,hp:Math.round(b.hp*m),atk:Math.round(b.atk*(1+(f-1)*.09)),def:Math.round(b.def*(1+(f-1)*.07)),reward:Math.round(b.reward*m)}}
 function beginBattleNow(){playBgm(battleBgm);clearInterval(battleTimer);const ps=stats(),en=enemyForFloor(state.selectedFloor);battle={floor:state.selectedFloor,p:{...ps,maxHp:ps.hp,currentHp:ps.hp,next:0,boostUntil:0,guard:false,parry:false,counter:false,critBoost:false},e:{...en,maxHp:en.hp,currentHp:en.hp,next:0},tick:0};cooldowns=[0,0,0];$('#battleArea').classList.remove('hidden');$('#enemyName').textContent=en.name;const enemyEl=$('#enemyAvatar'),playerEl=$('#playerAvatar');enemyEl.textContent=en.avatar;enemyEl.className='avatar'+(en.boss?' boss-aura':'')+(en.demon?' demon-aura':'');renderGrandpa(playerEl);playerEl.classList.remove('battle-enter-left','enemy-defeated');enemyEl.classList.remove('battle-enter-right','enemy-defeated');void playerEl.offsetWidth;void enemyEl.offsetWidth;playerEl.classList.add('battle-enter-left');enemyEl.classList.add('battle-enter-right');setTimeout(()=>{playerEl.classList.remove('battle-enter-left');enemyEl.classList.remove('battle-enter-right')},820);$('#battleLog').innerHTML='';log(`第${battle.floor}階、${en.name}が現れた！`);updateBattleUI();battleTimer=setInterval(stepBattle,100)}
 
@@ -10490,6 +10502,7 @@ function closeOptionsClean(){
   if(title)title.classList.remove('hidden');
 }
 
+
 function switchTab(tab,btn){
   const apply=()=>{
     document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));
@@ -10499,13 +10512,20 @@ function switchTab(tab,btn){
 
     const hero=document.querySelector('.hero');
     if(hero){
-      if(tab==='equip')renderGrandpaStatusClean();
-      else hero.style.display='none';
+      if(tab==='equip'){
+        hero.style.display='';
+        renderGrandpaStatusClean();
+      }else{
+        hero.style.display='none';
+      }
     }
 
     if(tab==='equip'){
       playBgm(menuBgm);
       renderEquip();
+      renderOwnedEquipmentClean5715();
+      if(typeof renderOwnedSkillsV570==='function')renderOwnedSkillsV570();
+      bindSkillToggleClean5715();
       renderGrandpaStatusClean();
     }else if(tab==='gacha'){
       playBgm(titleBgm);
@@ -10515,6 +10535,7 @@ function switchTab(tab,btn){
       playBgm(forgeBgm);
       renderForge();
     }else if(tab==='battle'){
+      if(hero)hero.style.display='none';
       playBgm(battleBgm);
       safeTextClean('#maxFloor',state.maxFloor);
       safeTextClean('#selectedFloor',state.selectedFloor);
@@ -10526,6 +10547,7 @@ function switchTab(tab,btn){
   if(label && typeof transitionToV52==='function')transitionToV52(label,apply);
   else apply();
 }
+
 
 function bindTabsClean(){document.querySelectorAll('.tab').forEach(b=>{if(b.dataset.tab==='battle'){b.onpointerdown=()=>playCastleButtonSEClean();b.ontouchstart=()=>playCastleButtonSEClean();}b.onclick=()=>switchTab(b.dataset.tab,b);});}
 
@@ -10817,18 +10839,15 @@ function renderGrandpaStatusClean(){
 }
 
 /* ---------- Owned equipment list ---------- */
+
 function getOwnedItemsClean5715(){
-  if(state && Array.isArray(state.inventory))return state.inventory;
-  if(state && Array.isArray(state.items))return state.items;
-  return [];
+  return (state && Array.isArray(state.gears)) ? state.gears : [];
 }
 
+
+
 function renderOwnedEquipmentClean5715(){
-  const root=
-    document.querySelector('#inventory') ||
-    document.querySelector('.inventory-list') ||
-    document.querySelector('#ownedEquipment') ||
-    document.querySelector('.owned-equipment-list');
+  const root=document.querySelector('#inventory');
   if(!root)return;
 
   const items=getOwnedItemsClean5715();
@@ -10837,23 +10856,20 @@ function renderOwnedEquipmentClean5715(){
     return;
   }
 
-  root.innerHTML=items.map((item,idx)=>{
-    const equipped=!!item.equipped;
-    const name=item.name||'名称不明';
-    const slot=item.slot||item.category||'装備';
-    const statParts=[];
-    if(item.atk)statParts.push(`攻+${item.atk}`);
-    if(item.def)statParts.push(`防+${item.def}`);
-    if(item.hp)statParts.push(`HP+${item.hp}`);
-    if(item.spd)statParts.push(`速+${item.spd}`);
+  root.innerHTML=items.map((g,idx)=>{
+    const equipped=state.equipped && state.equipped[g.slot]===g.id;
+    const slotLabel=(typeof SLOT_LABEL!=='undefined'&&SLOT_LABEL[g.slot])?SLOT_LABEL[g.slot]:g.slot;
+    const summary=(typeof statSummary==='function')?statSummary(g):'';
+    const effects=(g.effects||[]).map(x=>`<span class="effect-tag">${x}</span>`).join('');
     return `
       <div class="inventory-row-clean5715" data-inventory-index="${idx}">
         <div class="inventory-main-clean5715">
-          <div class="inventory-slot-clean5715">${slot}</div>
-          <div class="inventory-name-clean5715">${name}</div>
-          <div class="inventory-stats-clean5715">${statParts.join(' / ')}</div>
+          <div class="inventory-slot-clean5715">${slotLabel}</div>
+          <div class="inventory-name-clean5715">${g.name||'名称不明'}</div>
+          <div class="inventory-stats-clean5715">強化+${g.level||0}${summary?'｜'+summary:''}</div>
+          ${effects?`<div class="effect-line">${effects}</div>`:''}
         </div>
-        <button class="inventory-equip-btn-clean5715 ${equipped?'equipped':''}" data-index="${idx}">
+        <button class="inventory-equip-btn-clean5715 ${equipped?'equipped':''}" data-index="${idx}" ${equipped?'disabled':''}>
           ${equipped?'装備中':'装備'}
         </button>
       </div>`;
@@ -10861,26 +10877,20 @@ function renderOwnedEquipmentClean5715(){
 
   root.querySelectorAll('.inventory-equip-btn-clean5715').forEach(btn=>{
     btn.onclick=()=>{
-      const idx=Number(btn.dataset.index);
-      const item=items[idx];
-      if(!item)return;
-
-      if(typeof equipItem==='function'){
-        equipItem(idx);
-      }else{
-        items.forEach(x=>{
-          if((x.slot||x.category)===(item.slot||item.category))x.equipped=false;
-        });
-        item.equipped=true;
-        save();
-      }
+      const g=items[Number(btn.dataset.index)];
+      if(!g)return;
+      if(typeof playEquipSE==='function')playEquipSE();
+      state.equipped[g.slot]=g.id;
+      save();
       renderOwnedEquipmentClean5715();
       renderGrandpaStatusClean();
     };
   });
 }
 
+
 /* ---------- Skill toggle ---------- */
+
 function bindSkillToggleClean5715(){
   const btn=document.querySelector('#ownedSkillsToggleV570') || document.querySelector('.owned-skills-toggle-v570');
   const content=document.querySelector('#ownedSkillsContentV570') || document.querySelector('.owned-skills-content-v570');
@@ -10888,12 +10898,20 @@ function bindSkillToggleClean5715(){
   if(!btn || !content)return;
 
   btn.onclick=()=>{
-    const hidden=content.classList.contains('hidden') || getComputedStyle(content).display==='none';
-    content.classList.toggle('hidden',!hidden);
-    content.style.display=hidden?'block':'none';
-    if(arrow)arrow.textContent=hidden?'▲':'▼';
+    if(typeof renderOwnedSkillsV570==='function')renderOwnedSkillsV570();
+    const isHidden=content.classList.contains('hidden') || getComputedStyle(content).display==='none';
+    if(isHidden){
+      content.classList.remove('hidden');
+      content.style.display='block';
+      if(arrow)arrow.textContent='▲';
+    }else{
+      content.classList.add('hidden');
+      content.style.display='none';
+      if(arrow)arrow.textContent='▼';
+    }
   };
 }
+
 
 /* ---------- QR result with skill description ---------- */
 function showQrCharacterResultClean(char){
@@ -10964,3 +10982,22 @@ setTimeout(()=>{
   const active=document.querySelector('.panel.active');
   if(active && active.id==='equip')renderGrandpaStatusClean();
 },0);
+
+
+/* ===== v5.7.16 title BGM startup attempt ===== */
+(function(){
+  const bgm=document.querySelector('#titleBgm');
+  if(!bgm)return;
+  bgm.autoplay=true;
+  bgm.preload='auto';
+  const tryPlay=()=>{
+    try{
+      if(typeof audioSettingsClean!=='undefined')bgm.volume=audioSettingsClean.bgm;
+      const p=bgm.play();
+      if(p&&p.catch)p.catch(()=>{});
+    }catch(e){}
+  };
+  tryPlay();
+  document.addEventListener('DOMContentLoaded',tryPlay,{once:true});
+  window.addEventListener('pageshow',tryPlay);
+})();
