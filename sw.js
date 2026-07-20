@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'grandpa-demon-v5.7.2';
+const CACHE_VERSION = 'grandpa-demon-v5.7.3';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const MEDIA_CACHE = `${CACHE_VERSION}-media`;
 const APP_SHELL = ['./','./index.html','./style.css','./app.js','./manifest.webmanifest','./icon-192.png','./icon-512.png'];

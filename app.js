@@ -112,29 +112,16 @@ function currentStatsClean(){
 }
 
 /* ---------- Grandpa status: Equipment screen only ---------- */
-function renderGrandpaStatusClean(){
-  const hero=document.querySelector('.hero');if(!hero)return;
-  hero.style.display='';hero.className='hero card grandpa-status-card-clean';
-  hero.innerHTML=`<div class="grandpa-status-main-clean"><div class="grandpa-face-clean">👴</div><div class="grandpa-status-body-clean"><div class="grandpa-name-clean" id="playerNameDisplay">${state.playerName||'じいさん'}</div><div class="grandpa-stats-clean"><div><span>HP</span><b id="hpStat"></b></div><div><span>攻撃</span><b id="atkStat"></b></div><div><span>防御</span><b id="defStat"></b></div><div><span>速度</span><b id="spdStat"></b></div><div><span>会心</span><b id="critStat"></b></div><div><span>回避</span><b id="evaStat"></b></div><div><span>HP吸収</span><b id="lifestealStat"></b></div></div></div></div><div class="grandpa-status-actions-clean"><button id="statusDetailBtn">ステータス詳細</button><button id="statusHelpBtn">ヘルプ</button></div>`;
-  const s=currentStatsClean();safeText('#hpStat',s.hp);safeText('#atkStat',s.atk);safeText('#defStat',s.def);safeText('#spdStat',s.spd);safeText('#critStat',s.crit+'%');safeText('#evaStat',s.eva+'%');safeText('#lifestealStat',Math.round((s.lifesteal||0)*100)+'%');bindStatusButtonsV570();
-}
+
 function statObjectTextV570(o){const names={hp:'HP',atk:'攻撃',def:'防御',spd:'速度',crit:'会心',eva:'回避',lifesteal:'HP吸収'};return Object.keys(names).filter(k=>o&&o[k]).map(k=>`${names[k]} ${k==='lifesteal'?Math.round(o[k]*100)+'%':o[k]}`).join(' / ')||'補正なし';}
 function showStatusDetailV570(){const box=$('#detailContent'),title=$('#detailTitle');if(!box)return;if(title)title.textContent='ステータス詳細';const base={hp:128,atk:12,def:5,spd:50,crit:5,eva:3,lifesteal:0};const rows=[`<div class="detail-section"><b>じいさん基礎値</b><p>${statObjectTextV570(base)}</p></div>`];Object.entries(state.equipped).forEach(([slot,id])=>{const g=gear(id);if(!g)return;rows.push(`<div class="detail-section"><b>${SLOT_LABEL[slot]}：${g.name}</b><p>基礎効果：${statObjectTextV570(g.base||{})}</p><p>強化・その他：${statObjectTextV570(g.bonus||{})}</p></div>`)});const total=stats();rows.push(`<div class="detail-section total"><b>合計ステータス</b><p>${statObjectTextV570(total)}</p></div>`);box.innerHTML=rows.join('');$('#detailModal').classList.remove('hidden');}
 function bindStatusButtonsV570(){const d=$('#statusDetailBtn'),h=$('#statusHelpBtn');if(d)d.onclick=showStatusDetailV570;if(h)h.onclick=()=>$('#helpModal').classList.remove('hidden');}
 
 /* ---------- Screen switching: one implementation only ---------- */
-function switchTab(tab,btn){
-  const apply=()=>{document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));if(btn)btn.classList.add('active');const panel=document.querySelector('#'+tab);if(panel)panel.classList.add('active');const hero=document.querySelector('.hero');if(hero){if(tab==='equip')renderGrandpaStatusClean();else hero.style.display='none';}
-  if(tab==='equip'){playBgm(menuBgm);renderEquip();renderGrandpaStatusClean();renderOwnedSkillsV570();}
-  else if(tab==='gacha'){playBgm(titleBgm);renderSkillsClean();}
-  else if(tab==='forge'){playBgm(forgeBgm);renderForge();}
-  else if(tab==='battle'){playBgm(battleBgm);safeText('#maxFloor',state.maxFloor);safeText('#selectedFloor',state.selectedFloor);}
-  else if(tab==='options'){playBgm(menuBgm);bindAudioOptionsV570();applyAudioVolumesV570();}save();};
-  const label={gacha:'ショップ',forge:'鍛冶屋',battle:'魔王城'}[tab];if(label&&typeof transitionToV52==='function')transitionToV52(label,apply);else apply();
-}
+
 
 /* ---------- Tabs: dedicated Demon Castle SE ---------- */
-function bindTabsClean(){document.querySelectorAll('.tab').forEach(b=>{b.onclick=()=>switchTab(b.dataset.tab,b);});}
+
 
 /* ---------- Skill shop: clean result-only UI ---------- */
 function getSkillDefClean(name){
@@ -281,310 +268,290 @@ setTimeout(initCleanBuild,0);
 ['detailClose','helpClose','skillsClose'].forEach(id=>{const b=$('#'+id);if(b)b.onclick=()=>b.closest('.modal').classList.add('hidden')});
 
 
-/* ===== BUILD 5.7.1 FINAL FIXES ===== */
 
-/* ---------- Single persistent grandpa face ---------- */
-const GRANDPA_FACE_POOL_V571=['👴','🧓','👨‍🦳','👨‍🦲'];
-function ensureGrandpaFaceIndexV571(){
+
+/* ===== CLEAN BUILD 5.7.3 ===== */
+
+const AUDIO_KEY_CLEAN='grandpaDemonAudioSettings';
+const GRANDPA_FACES_CLEAN=['👴','🧓','👨‍🦳','👨‍🦲'];
+
+let audioSettingsClean={bgm:0.70,se:0.80};
+try{
+  const saved=JSON.parse(localStorage.getItem(AUDIO_KEY_CLEAN)||'null');
+  if(saved){
+    if(typeof saved.bgm==='number')audioSettingsClean.bgm=Math.max(0,Math.min(1,saved.bgm));
+    if(typeof saved.se==='number')audioSettingsClean.se=Math.max(0,Math.min(1,saved.se));
+  }
+}catch(e){}
+
+const castleButtonSeClean = document.querySelector('#castleButtonSe');
+
+function safeTextClean(sel,val){
+  const el=document.querySelector(sel);
+  if(el)el.textContent=val;
+}
+
+function ensureFaceIndexClean(){
   if(typeof state.grandpaFaceIndex!=='number'){
-    state.grandpaFaceIndex=Math.floor(Math.random()*GRANDPA_FACE_POOL_V571.length);
+    state.grandpaFaceIndex=Math.floor(Math.random()*GRANDPA_FACES_CLEAN.length);
     save();
   }
   return state.grandpaFaceIndex;
 }
-function grandpaFaceV571(){
-  return GRANDPA_FACE_POOL_V571[ensureGrandpaFaceIndexV571()%GRANDPA_FACE_POOL_V571.length];
+
+function grandpaFaceClean(){
+  return GRANDPA_FACES_CLEAN[ensureFaceIndexClean()%GRANDPA_FACES_CLEAN.length];
 }
 
-/* ---------- Status card layout ---------- */
-function renderGrandpaStatusClean(){
-  const hero=document.querySelector('.hero');
-  if(!hero)return;
-  hero.style.display='';
-  hero.className='hero card grandpa-status-card-v571';
-
-  hero.innerHTML=`
-    <div class="grandpa-left-v571">
-      <div class="grandpa-name-v571" id="playerNameDisplay">${state.playerName||'じいさん'}</div>
-      <div class="grandpa-face-v571">${grandpaFaceV571()}</div>
-    </div>
-    <div class="grandpa-right-v571">
-      <div class="grandpa-stat-line-v571"><span>HP</span><b id="hpStat"></b></div>
-      <div class="grandpa-stat-line-v571"><span>攻撃</span><b id="atkStat"></b></div>
-      <div class="grandpa-stat-line-v571"><span>防御</span><b id="defStat"></b></div>
-      <div class="grandpa-stat-line-v571"><span>速度</span><b id="spdStat"></b></div>
-      <div class="grandpa-stat-line-v571"><span>会心</span><b id="critStat"></b></div>
-      <div class="grandpa-stat-line-v571"><span>回避</span><b id="evaStat"></b></div>
-      <div class="grandpa-stat-line-v571"><span>HP吸収</span><b id="lifestealStat"></b></div>
-    </div>
-    <div class="grandpa-actions-v571">
-      <button id="statusDetailBtn">ステータス詳細</button>
-      <button id="statusHelpBtn">ヘルプ</button>
-      <button id="learnedSkillsBtn">スキル</button>
-    </div>`;
-
-  const s=stats();
-  safeText('#hpStat',s.hp);
-  safeText('#atkStat',s.atk);
-  safeText('#defStat',s.def);
-  safeText('#spdStat',s.spd);
-  safeText('#critStat',s.crit+'%');
-  safeText('#evaStat',s.eva+'%');
-  safeText('#lifestealStat',Math.round((s.lifesteal||0)*100)+'%');
-
-  if(typeof bindStatusButtonsV570==='function') bindStatusButtonsV570();
-  else if(typeof bindHeroButtonsV52==='function') bindHeroButtonsV52();
+function applyAudioVolumesClean(){
+  [titleBgm,menuBgm,battleBgm,forgeBgm].forEach(a=>{if(a)a.volume=audioSettingsClean.bgm});
+  [hitSe,buttonSe,equipButtonSe,slotButtonSe,rouletteSe,slotResultSe,clashSe,castleButtonSeClean].forEach(a=>{if(a)a.volume=audioSettingsClean.se});
+  const b=document.querySelector('#bgmVolumeClean');
+  const s=document.querySelector('#seVolumeClean');
+  const bv=document.querySelector('#bgmVolumeValueClean');
+  const sv=document.querySelector('#seVolumeValueClean');
+  if(b)b.value=Math.round(audioSettingsClean.bgm*100);
+  if(s)s.value=Math.round(audioSettingsClean.se*100);
+  if(bv)bv.textContent=Math.round(audioSettingsClean.bgm*100);
+  if(sv)sv.textContent=Math.round(audioSettingsClean.se*100);
 }
 
-/* ---------- Battle face uses exactly the same face as status card ---------- */
-function renderBattleGrandpaFaceOnlyClean(){
-  const el=document.querySelector('#playerAvatar');
-  if(el){
-    el.innerHTML=`<span class="battle-grandpa-face-v571">${grandpaFaceV571()}</span>`;
+function bindAudioOptionsClean(){
+  const b=document.querySelector('#bgmVolumeClean');
+  const s=document.querySelector('#seVolumeClean');
+  if(b){
+    b.oninput=()=>{
+      audioSettingsClean.bgm=Number(b.value)/100;
+      localStorage.setItem(AUDIO_KEY_CLEAN,JSON.stringify(audioSettingsClean));
+      applyAudioVolumesClean();
+    };
+  }
+  if(s){
+    s.oninput=()=>{
+      audioSettingsClean.se=Number(s.value)/100;
+      localStorage.setItem(AUDIO_KEY_CLEAN,JSON.stringify(audioSettingsClean));
+      applyAudioVolumesClean();
+    };
   }
 }
-if(typeof renderBattle==='function'){
-  const _renderBattle571=renderBattle;
-  renderBattle=function(){
-    const r=_renderBattle571.apply(this,arguments);
-    renderBattleGrandpaFaceOnlyClean();
-    return r;
-  };
-}
 
-/* ---------- Immediate, reliable button SE ---------- */
-function playGeneralButtonSEV571(){
+function playGeneralButtonSEClean(){
   try{
     if(!buttonSe)return;
     buttonSe.pause();
     buttonSe.currentTime=0;
     buttonSe.playbackRate=1.08;
-    if(typeof audioSettingsV570!=='undefined')buttonSe.volume=audioSettingsV570.se;
+    buttonSe.volume=audioSettingsClean.se;
     const p=buttonSe.play();
     if(p&&p.catch)p.catch(()=>{});
   }catch(e){}
 }
 
-/* Use pointerdown so SE starts immediately on tap.
-   Demon Castle keeps its dedicated SE and is excluded from normal SE. */
-document.addEventListener('pointerdown',ev=>{
-  const btn=ev.target.closest&&ev.target.closest('button');
-  if(!btn || btn.disabled)return;
-  if(btn.classList.contains('tab') && btn.dataset.tab==='battle')return;
-  playGeneralButtonSEV571();
-},{passive:true});
-
-/* ---------- Options from title screen ---------- */
-function openTitleOptionsV571(){
-  const title=document.querySelector('#titleScreen');
-  const options=document.querySelector('#options');
-  if(title)title.classList.add('hidden');
-  if(options){
-    options.classList.add('active');
-    options.style.display='block';
-  }
-  if(typeof bindAudioOptionsV570==='function')bindAudioOptionsV570();
-  if(typeof applyAudioVolumesV570==='function')applyAudioVolumesV570();
-
-  let close=document.querySelector('#closeTitleOptionsV571');
-  if(!close && options){
-    close=document.createElement('button');
-    close.id='closeTitleOptionsV571';
-    close.className='close-title-options-v571';
-    close.textContent='閉じる';
-    options.appendChild(close);
-  }
-  if(close){
-    close.onclick=()=>{
-      if(options){
-        options.classList.remove('active');
-        options.style.display='none';
-      }
-      if(title)title.classList.remove('hidden');
-    };
-  }
-}
-const titleOptionsBtnV571=document.querySelector('#titleOptionsBtnV571');
-if(titleOptionsBtnV571)titleOptionsBtnV571.onclick=openTitleOptionsV571;
-
-/* Prevent options from being treated as a normal in-game tab. */
-const optionsPanelV571=document.querySelector('#options');
-if(optionsPanelV571 && !optionsPanelV571.classList.contains('active')){
-  optionsPanelV571.style.display='none';
+function playCastleButtonSEClean(){
+  try{
+    if(!castleButtonSeClean)return;
+    castleButtonSeClean.pause();
+    castleButtonSeClean.currentTime=0;
+    castleButtonSeClean.volume=audioSettingsClean.se;
+    const p=castleButtonSeClean.play();
+    if(p&&p.catch)p.catch(()=>{});
+  }catch(e){}
 }
 
-/* Refresh status face and battle face consistency on startup. */
-setTimeout(()=>{
-  if(typeof state!=='undefined'){
-    ensureGrandpaFaceIndexV571();
-    const active=document.querySelector('.panel.active');
-    if(active && active.id==='equip')renderGrandpaStatusClean();
-  }
-},0);
-
-
-/* ===== BUILD 5.7.2 FINAL FIXES ===== */
-
-/* ---------- Remove status skill button permanently ---------- */
-function removeStatusSkillButtonV572(){
-  const btn=document.querySelector('#learnedSkillsBtn');
-  if(btn)btn.remove();
-}
-
-/* ---------- Rebuild status card without skill button ---------- */
 function renderGrandpaStatusClean(){
   const hero=document.querySelector('.hero');
   if(!hero)return;
   hero.style.display='';
-  hero.className='hero card grandpa-status-card-v571';
-
+  hero.className='hero card grandpa-status-card-clean';
   hero.innerHTML=`
-    <div class="grandpa-left-v571">
-      <div class="grandpa-name-v571" id="playerNameDisplay">${state.playerName||'じいさん'}</div>
-      <div class="grandpa-face-v571">${grandpaFaceV571()}</div>
+    <div class="grandpa-left-clean">
+      <div class="grandpa-name-clean" id="playerNameDisplay">${state.playerName||'じいさん'}</div>
+      <div class="grandpa-face-clean">${grandpaFaceClean()}</div>
     </div>
-    <div class="grandpa-right-v571">
-      <div class="grandpa-stat-line-v571"><span>HP</span><b id="hpStat"></b></div>
-      <div class="grandpa-stat-line-v571"><span>攻撃</span><b id="atkStat"></b></div>
-      <div class="grandpa-stat-line-v571"><span>防御</span><b id="defStat"></b></div>
-      <div class="grandpa-stat-line-v571"><span>速度</span><b id="spdStat"></b></div>
-      <div class="grandpa-stat-line-v571"><span>会心</span><b id="critStat"></b></div>
-      <div class="grandpa-stat-line-v571"><span>回避</span><b id="evaStat"></b></div>
-      <div class="grandpa-stat-line-v571"><span>HP吸収</span><b id="lifestealStat"></b></div>
+    <div class="grandpa-right-clean">
+      <div class="grandpa-stat-clean"><span>HP</span><b id="hpStat"></b></div>
+      <div class="grandpa-stat-clean"><span>攻撃</span><b id="atkStat"></b></div>
+      <div class="grandpa-stat-clean"><span>防御</span><b id="defStat"></b></div>
+      <div class="grandpa-stat-clean"><span>速度</span><b id="spdStat"></b></div>
+      <div class="grandpa-stat-clean"><span>会心</span><b id="critStat"></b></div>
+      <div class="grandpa-stat-clean"><span>回避</span><b id="evaStat"></b></div>
+      <div class="grandpa-stat-clean"><span>HP吸収</span><b id="lifestealStat"></b></div>
     </div>
-    <div class="grandpa-actions-v572">
+    <div class="grandpa-actions-clean">
       <button id="statusDetailBtn">ステータス詳細</button>
       <button id="statusHelpBtn">ヘルプ</button>
     </div>`;
 
   const s=stats();
-  safeText('#hpStat',s.hp);
-  safeText('#atkStat',s.atk);
-  safeText('#defStat',s.def);
-  safeText('#spdStat',s.spd);
-  safeText('#critStat',s.crit+'%');
-  safeText('#evaStat',s.eva+'%');
-  safeText('#lifestealStat',Math.round((s.lifesteal||0)*100)+'%');
+  safeTextClean('#hpStat',s.hp);
+  safeTextClean('#atkStat',s.atk);
+  safeTextClean('#defStat',s.def);
+  safeTextClean('#spdStat',s.spd);
+  safeTextClean('#critStat',s.crit+'%');
+  safeTextClean('#evaStat',s.eva+'%');
+  safeTextClean('#lifestealStat',Math.round((s.lifesteal||0)*100)+'%');
 
-  if(typeof bindStatusButtonsV570==='function')bindStatusButtonsV570();
+  const detail=document.querySelector('#statusDetailBtn');
+  const help=document.querySelector('#statusHelpBtn');
+  if(detail)detail.onclick=()=>{if(typeof showStatusDetailV52==='function')showStatusDetailV52()};
+  if(help)help.onclick=()=>{
+    const modal=document.querySelector('#helpModal');
+    if(modal)modal.classList.remove('hidden');
+  };
 }
 
-/* ---------- Title options works reliably ---------- */
-function closeTitleOptionsV572(){
+function forceBattleFaceClean(){
+  const el=document.querySelector('#playerAvatar');
+  if(!el)return;
+  el.className='battle-avatar-clean';
+  el.innerHTML=`<span class="battle-grandpa-face-clean">${grandpaFaceClean()}</span>`;
+}
+
+function playBattleIntroClean(done){
+  let ov=document.querySelector('#battleIntroClean');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='battleIntroClean';
+    ov.innerHTML='<div class="battle-cross-clean">⚔️</div>';
+    document.body.appendChild(ov);
+  }
+  ov.classList.remove('active');
+  void ov.offsetWidth;
+  ov.classList.add('active');
+  try{
+    if(clashSe){
+      clashSe.pause();clashSe.currentTime=0;clashSe.volume=audioSettingsClean.se;
+      const p=clashSe.play();if(p&&p.catch)p.catch(()=>{});
+    }
+  }catch(e){}
+  setTimeout(()=>{
+    ov.classList.remove('active');
+    if(done)done();
+  },220);
+}
+
+function showOptionsClean(){
   const title=document.querySelector('#titleScreen');
-  const options=document.querySelector('#options');
-  if(options){
-    options.classList.remove('active');
-    options.style.display='none';
-  }
-  if(title){
-    title.classList.remove('hidden');
-    title.style.display='';
-  }
+  const panel=document.querySelector('#optionsPanelClean');
+  if(title)title.classList.add('hidden');
+  if(panel)panel.classList.remove('hidden');
+  bindAudioOptionsClean();
+  applyAudioVolumesClean();
 }
-
-function openTitleOptionsV571(){
+function closeOptionsClean(){
   const title=document.querySelector('#titleScreen');
-  const options=document.querySelector('#options');
-  if(!options)return;
-
-  if(title){
-    title.classList.add('hidden');
-    title.style.display='none';
-  }
-
-  options.classList.add('active');
-  options.style.display='block';
-
-  if(typeof bindAudioOptionsV570==='function')bindAudioOptionsV570();
-  if(typeof applyAudioVolumesV570==='function')applyAudioVolumesV570();
-
-  let close=document.querySelector('#closeTitleOptionsV571');
-  if(!close){
-    close=document.createElement('button');
-    close.id='closeTitleOptionsV571';
-    close.className='primary title-main-btn-v572 close-title-options-v572';
-    close.textContent='閉じる';
-    options.appendChild(close);
-  }
-  close.onclick=closeTitleOptionsV572;
+  const panel=document.querySelector('#optionsPanelClean');
+  if(panel)panel.classList.add('hidden');
+  if(title)title.classList.remove('hidden');
 }
 
-/* Bind after DOM is ready and overwrite any broken handler. */
-setTimeout(()=>{
-  const btn=document.querySelector('#titleOptionsBtnV571');
-  if(btn){
-    btn.className='primary title-main-btn-v572';
-    btn.onclick=(e)=>{
-      try{e.preventDefault()}catch(_){}
-      openTitleOptionsV571();
+function switchTab(tab,btn){
+  const apply=()=>{
+    document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));
+    if(btn)btn.classList.add('active');
+    const panel=document.querySelector('#'+tab);
+    if(panel)panel.classList.add('active');
+
+    const hero=document.querySelector('.hero');
+    if(hero){
+      if(tab==='equip')renderGrandpaStatusClean();
+      else hero.style.display='none';
+    }
+
+    if(tab==='equip'){
+      playBgm(menuBgm);
+      renderEquip();
+      renderGrandpaStatusClean();
+    }else if(tab==='gacha'){
+      playBgm(titleBgm);
+      if(typeof renderSkillsClean==='function')renderSkillsClean();
+      else if(typeof renderSkills==='function')renderSkills();
+    }else if(tab==='forge'){
+      playBgm(forgeBgm);
+      renderForge();
+    }else if(tab==='battle'){
+      playBgm(battleBgm);
+      safeTextClean('#maxFloor',state.maxFloor);
+      safeTextClean('#selectedFloor',state.selectedFloor);
+    }
+    save();
+  };
+
+  const label={gacha:'ショップ',forge:'鍛冶屋',battle:'魔王城'}[tab];
+  if(label && typeof transitionToV52==='function')transitionToV52(label,apply);
+  else apply();
+}
+
+function bindTabsClean(){
+  document.querySelectorAll('.tab').forEach(b=>{
+    b.onclick=(ev)=>{
+      if(b.dataset.tab==='battle'){
+        try{ev.stopPropagation()}catch(e){}
+        playCastleButtonSEClean();
+      }
+      switchTab(b.dataset.tab,b);
+    };
+  });
+}
+
+function bindTitleOptionsClean(){
+  const open=document.querySelector('#titleOptionsBtn');
+  const close=document.querySelector('#closeOptionsClean');
+  if(open)open.onclick=showOptionsClean;
+  if(close)close.onclick=closeOptionsClean;
+}
+
+function bindButtonSEClean(){
+  document.addEventListener('pointerdown',ev=>{
+    const btn=ev.target.closest&&ev.target.closest('button');
+    if(!btn||btn.disabled)return;
+    if(btn.classList.contains('tab')&&btn.dataset.tab==='battle')return;
+    playGeneralButtonSEClean();
+  },{passive:true});
+}
+
+function hookBattleClean(){
+  if(typeof renderBattle==='function'){
+    const baseRenderBattle=renderBattle;
+    renderBattle=function(){
+      const r=baseRenderBattle.apply(this,arguments);
+      forceBattleFaceClean();
+      return r;
     };
   }
-},0);
-
-/* ---------- Battle grandpa: exact same face as status, no equipment ---------- */
-function forceBattleFaceV572(){
-  const el=document.querySelector('#playerAvatar');
-  if(!el)return;
-  el.className='battle-avatar-v572';
-  el.innerHTML=`<span class="battle-grandpa-face-v572">${grandpaFaceV571()}</span>`;
-}
-
-/* Hook all known battle render/update paths. */
-if(typeof renderBattle==='function'){
-  const baseRenderBattleV572=renderBattle;
-  renderBattle=function(){
-    const r=baseRenderBattleV572.apply(this,arguments);
-    forceBattleFaceV572();
-    return r;
-  };
-}
-if(typeof startBattle==='function'){
-  const baseStartBattleV572=startBattle;
-  startBattle=function(){
-    const r=baseStartBattleV572.apply(this,arguments);
-    setTimeout(forceBattleFaceV572,0);
-    return r;
-  };
-}
-
-/* Mutation observer ensures legacy code cannot reinsert equipment emojis. */
-const battleAvatarObserverV572=new MutationObserver(()=>{
-  const el=document.querySelector('#playerAvatar');
-  if(!el)return;
-  const desired=grandpaFaceV571();
-  if(el.textContent.trim()!==desired || el.querySelectorAll('*').length!==1){
-    el.innerHTML=`<span class="battle-grandpa-face-v572">${desired}</span>`;
+  if(typeof startBattle==='function'){
+    const baseStartBattle=startBattle;
+    startBattle=function(){
+      const r=baseStartBattle.apply(this,arguments);
+      setTimeout(forceBattleFaceClean,0);
+      return r;
+    };
   }
-});
-setTimeout(()=>{
-  const el=document.querySelector('#playerAvatar');
-  if(el){
-    battleAvatarObserverV572.observe(el,{childList:true,subtree:true,characterData:true});
-    forceBattleFaceV572();
-  }
-},0);
+}
 
-/* ---------- Remove current equipment window if legacy renderer recreates it ---------- */
-function removeCurrentEquipmentWindowV572(){
+function removeCurrentEquipmentClean(){
   document.querySelectorAll('h2').forEach(h=>{
     if((h.textContent||'').trim()==='現在の装備'){
-      const card=h.closest('section,.card,div');
-      if(card && card!==document.body)card.remove();
+      const box=h.closest('section,.card');
+      if(box)box.remove();
     }
   });
 }
-if(typeof renderEquip==='function'){
-  const baseRenderEquipV572=renderEquip;
-  renderEquip=function(){
-    const r=baseRenderEquipV572.apply(this,arguments);
-    removeCurrentEquipmentWindowV572();
-    removeStatusSkillButtonV572();
-    return r;
-  };
-}
 
-setTimeout(()=>{
-  removeCurrentEquipmentWindowV572();
-  removeStatusSkillButtonV572();
-},0);
+function initClean573(){
+  applyAudioVolumesClean();
+  bindAudioOptionsClean();
+  bindTitleOptionsClean();
+  bindTabsClean();
+  bindButtonSEClean();
+  hookBattleClean();
+  removeCurrentEquipmentClean();
+
+  const active=document.querySelector('.panel.active');
+  if(active&&active.id==='equip'){
+    renderGrandpaStatusClean();
+    renderEquip();
+    removeCurrentEquipmentClean();
+  }
+}
+setTimeout(initClean573,0);

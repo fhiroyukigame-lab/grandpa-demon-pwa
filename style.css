@@ -120,12 +120,10 @@
 @keyframes swordCenterClean{0%{opacity:0;transform:scale(.7)}35%{opacity:1;transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
 .battle-grandpa-face-clean{font-size:72px;line-height:1;display:inline-block}
 
-/* ===== BUILD 5.7.0 ===== */
-.owned-skills-card-v570{padding:0;overflow:hidden}.owned-skills-toggle-v570{width:100%;min-height:54px;padding:0 18px;display:flex;justify-content:space-between;align-items:center;font-weight:800;border-radius:inherit}.owned-skills-content-v570{padding:14px 18px;border-top:1px solid rgba(255,255,255,.08)}.owned-skills-content-v570.hidden{display:none}.owned-skill-row-v570{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)}.owned-skill-row-v570:last-child{border-bottom:0}.owned-skill-row-v570 div{font-size:14px;opacity:.72;margin-top:4px}.options-card-v570{padding:22px}.option-row-v570{display:grid;grid-template-columns:90px 1fr 42px;gap:12px;align-items:center;margin:20px 0}.option-row-v570 input{width:100%}.grandpa-status-actions-clean{grid-template-columns:1fr 1fr}.detail-section{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08)}.detail-section.total{border-bottom:0}
 
 
-/* ===== BUILD 5.7.1 STATUS LAYOUT ===== */
-.grandpa-status-card-v571{
+/* ===== CLEAN BUILD 5.7.3 ===== */
+.grandpa-status-card-clean{
   display:grid !important;
   grid-template-columns:minmax(0,1fr) 150px;
   grid-template-areas:
@@ -134,39 +132,32 @@
   gap:16px 18px;
   padding:20px;
 }
-.grandpa-left-v571{
+.grandpa-left-clean{
   grid-area:left;
-  min-width:0;
   display:grid;
   grid-template-rows:1fr 2fr;
   align-items:center;
   justify-items:center;
 }
-.grandpa-name-v571{
+.grandpa-name-clean{
   width:100%;
   text-align:center;
   font-size:22px;
   font-weight:800;
-  line-height:1.2;
-  overflow-wrap:anywhere;
 }
-.grandpa-face-v571{
+.grandpa-face-clean{
   font-size:86px;
   line-height:1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
 }
-.grandpa-right-v571{
+.grandpa-right-clean{
   grid-area:right;
   display:flex;
   flex-direction:column;
   gap:7px;
   justify-content:center;
 }
-.grandpa-stat-line-v571{
+.grandpa-stat-clean{
   display:flex;
-  align-items:center;
   justify-content:space-between;
   gap:10px;
   padding:7px 9px;
@@ -174,61 +165,16 @@
   background:rgba(255,255,255,.045);
   font-size:13px;
 }
-.grandpa-stat-line-v571 span{
-  opacity:.68;
-  white-space:nowrap;
-}
-.grandpa-stat-line-v571 b{
-  font-size:15px;
-}
-.grandpa-actions-v571{
-  grid-area:actions;
-  display:grid;
-  grid-template-columns:1.4fr 1fr 1fr;
-  gap:10px;
-}
-.grandpa-actions-v571 button{
-  min-height:44px;
-  font-size:14px;
-}
-.battle-grandpa-face-v571{
-  font-size:72px;
-  line-height:1;
-  display:inline-block;
-}
-.title-option-btn-v571{
-  width:100%;
-  margin-top:12px;
-  min-height:48px;
-}
-.close-title-options-v571{
-  width:100%;
-  margin-top:18px;
-  min-height:48px;
-}
-@media(max-width:520px){
-  .grandpa-status-card-v571{
-    grid-template-columns:minmax(0,1fr) 138px;
-  }
-  .grandpa-name-v571{font-size:20px}
-  .grandpa-face-v571{font-size:78px}
-  .grandpa-stat-line-v571{font-size:12px}
-  .grandpa-stat-line-v571 b{font-size:14px}
-}
-
-
-/* ===== BUILD 5.7.2 ===== */
-.grandpa-actions-v572{
+.grandpa-stat-clean span{opacity:.68}
+.grandpa-stat-clean b{font-size:15px}
+.grandpa-actions-clean{
   grid-area:actions;
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:10px;
 }
-.grandpa-actions-v572 button{
-  min-height:44px;
-  font-size:14px;
-}
-.title-main-btn-v572{
+.grandpa-actions-clean button{min-height:44px;font-size:14px}
+.title-main-btn{
   width:100%;
   min-height:72px;
   margin-top:16px;
@@ -236,18 +182,52 @@
   font-weight:800;
   border-radius:18px;
 }
-.close-title-options-v572{
-  margin-top:18px;
+.title-options-panel{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  background:rgba(0,0,0,.92);
+  padding:24px;
+  overflow:auto;
 }
-.battle-avatar-v572{
+.title-options-panel.hidden{display:none}
+.options-card-clean{max-width:620px;margin:60px auto 0;padding:22px}
+.option-row-clean{
+  display:grid;
+  grid-template-columns:90px 1fr 44px;
+  gap:12px;
+  align-items:center;
+  margin:18px 0;
+}
+.option-row-clean input{width:100%}
+.battle-avatar-clean{
   display:flex;
   align-items:center;
   justify-content:center;
   min-width:90px;
   min-height:90px;
 }
-.battle-grandpa-face-v572{
+.battle-grandpa-face-clean{
   font-size:76px;
   line-height:1;
-  display:inline-block;
+}
+#battleIntroClean{
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.08);
+  pointer-events:none;
+}
+#battleIntroClean.active{display:flex}
+.battle-cross-clean{
+  font-size:92px;
+  animation:battleCrossClean .2s ease-out;
+}
+@keyframes battleCrossClean{
+  0%{opacity:0;transform:scale(.7)}
+  35%{opacity:1;transform:scale(1.15)}
+  100%{opacity:1;transform:scale(1)}
 }
