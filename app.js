@@ -530,7 +530,24 @@ function qrCharacterFromTextClean(text){const seed=hashStringClean(text),names=(
 function showQrCharacterResultClean(c){const b=document.querySelector('#qrResultBox');if(!b)return;pendingQrCharacterClean=c;b.classList.remove('hidden');b.innerHTML=`<div class="qr-result-title">QRじいさん候補</div><div class="qr-result-name">${c.playerName}</div><div class="qr-result-stats">HP ${c.baseStats.hp} / 攻撃 ${c.baseStats.atk} / 防御 ${c.baseStats.def}<br>速度 ${c.baseStats.spd} / 会心 ${c.baseStats.crit}% / 回避 ${c.baseStats.eva}%</div><div class="qr-result-skill">初期スキル：${c.initialSkill||'なし'}</div><button id="startQrGameBtn" class="primary title-main-btn">このじいさんでニューゲーム</button>`;document.querySelector('#startQrGameBtn').onclick=startQrNewGameClean;}
 function applyQrCharacterToStateClean(c){state=migrate(null);state.playerName=c.playerName;state.grandpaFaceIndex=c.grandpaFaceIndex;state.faceId=c.faceIndex;state.qrHash=c.qrHash;state.qrBaseStats=c.baseStats;state.skills={};if(c.initialSkill)state.skills[c.initialSkill]=1;}
 function startQrNewGameClean(){if(!pendingQrCharacterClean)return;if(localStorage.getItem('grandpaDemonSave')&&!confirm('現在のセーブデータを消してQRじいさんでニューゲームを始めますか？'))return;localStorage.removeItem('grandpaDemonSave');applyQrCharacterToStateClean(pendingQrCharacterClean);save();enterGame();const b=document.querySelector('.tab[data-tab="equip"]');if(b)switchTab('equip',b);}
-function stopQrScannerClean(){if(qrScanTimerClean){clearInterval(qrScanTimerClean);qrScanTimerClean=null;}if(qrStreamClean){qrStreamClean.getTracks().forEach(t=>t.stop());qrStreamClean=null;}const m=document.querySelector('#qrScannerModal');if(m)m.classList.add('hidden');}
-async function startQrScannerClean(){const m=document.querySelector('#qrScannerModal'),v=document.querySelector('#qrVideo'),s=document.querySelector('#qrScanStatus');if(!m||!v)return;m.classList.remove('hidden');if(s)s.textContent='カメラを起動しています...';try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('カメラAPIが利用できません');if(typeof BarcodeDetector==='undefined')throw new Error('このブラウザはQRコード自動認識に対応していません');const d=new BarcodeDetector({formats:['qr_code']});qrStreamClean=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});v.srcObject=qrStreamClean;await v.play();if(s)s.textContent='QRコードを画面中央に映してください';qrScanTimerClean=setInterval(async()=>{try{if(v.readyState<2)return;const codes=await d.detect(v);if(codes&&codes.length&&codes[0].rawValue){stopQrScannerClean();showQrCharacterResultClean(qrCharacterFromTextClean(codes[0].rawValue));}}catch(e){}},250);}catch(e){if(s)s.textContent=e.message||'QRコードを読み取れませんでした';}}
+function stopQrScannerClean(){
+  if(qrScanTimerClean){cancelAnimationFrame(qrScanTimerClean);qrScanTimerClean=null;}
+  if(qrStreamClean){qrStreamClean.getTracks().forEach(t=>t.stop());qrStreamClean=null;}
+  const v=document.querySelector('#qrVideo');if(v){v.pause();v.srcObject=null;}
+  const m=document.querySelector('#qrScannerModal');if(m)m.classList.add('hidden');
+}
+async function startQrScannerClean(){
+  const m=document.querySelector('#qrScannerModal'),v=document.querySelector('#qrVideo'),status=document.querySelector('#qrScanStatus');
+  if(!m||!v)return;m.classList.remove('hidden');if(status)status.textContent='カメラを起動しています...';
+  try{
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('この環境ではカメラを利用できません');
+    if(typeof jsQR!=='function')throw new Error('QR解析ライブラリを読み込めませんでした');
+    qrStreamClean=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});
+    v.srcObject=qrStreamClean;await v.play();if(status)status.textContent='QRコードを画面中央に映してください';
+    const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});let lastScan=0;
+    const scan=(ts)=>{if(!qrStreamClean)return;if(ts-lastScan>=100){lastScan=ts;try{if(v.readyState>=2&&v.videoWidth&&v.videoHeight){const maxWidth=720,scale=Math.min(1,maxWidth/v.videoWidth);canvas.width=Math.max(1,Math.round(v.videoWidth*scale));canvas.height=Math.max(1,Math.round(v.videoHeight*scale));ctx.drawImage(v,0,0,canvas.width,canvas.height);const img=ctx.getImageData(0,0,canvas.width,canvas.height);const code=jsQR(img.data,img.width,img.height,{inversionAttempts:'attemptBoth'});if(code&&code.data){const raw=code.data;stopQrScannerClean();showQrCharacterResultClean(qrCharacterFromTextClean(raw));return;}}}catch(e){}}qrScanTimerClean=requestAnimationFrame(scan);};
+    qrScanTimerClean=requestAnimationFrame(scan);
+  }catch(e){if(status)status.textContent=e.message||'QRコードを読み取れませんでした';}
+}
 function bindQrUiClean(){const o=document.querySelector('#qrGenerateBtn'),c=document.querySelector('#qrScannerClose');if(o)o.onclick=startQrScannerClean;if(c)c.onclick=stopQrScannerClean;}
 const baseStatsFunction574=stats;stats=function(){const s=baseStatsFunction574(),q=state&&state.qrBaseStats;if(!q)return s;s.hp+=(q.hp-100);s.atk+=(q.atk-10);s.def+=(q.def-5);s.spd+=(q.spd-50);s.crit+=(q.crit-5);s.eva+=(q.eva-3);return s;};
