@@ -10733,3 +10733,74 @@ if(typeof renderEquip==='function'){
   };
 }
 setTimeout(removeCurrentEquipmentV579,0);
+
+
+/* ===== v5.7.12 clean UI + battle face ===== */
+function removeCurrentEquipmentV5712(){
+  document.querySelectorAll('h2').forEach(h=>{
+    if((h.textContent||'').trim()==='現在の装備'){
+      const box=h.closest('section,.card');
+      if(box)box.remove();
+    }
+  });
+}
+
+function getGrandpaFaceForBattleV5712(){
+  try{
+    if(typeof grandpaFaceClean==='function')return grandpaFaceClean();
+    if(typeof grandpaFaceV571==='function')return grandpaFaceV571();
+    if(typeof GRANDPA_FACES_CLEAN!=='undefined' && typeof state.grandpaFaceIndex==='number'){
+      return GRANDPA_FACES_CLEAN[state.grandpaFaceIndex%GRANDPA_FACES_CLEAN.length];
+    }
+  }catch(e){}
+  return '👴';
+}
+
+function forceBattleFaceV5712(){
+  const el=document.querySelector('#playerAvatar');
+  if(!el)return;
+  el.className='battle-avatar-v5712';
+  el.innerHTML=`<span class="battle-grandpa-face-v5712">${getGrandpaFaceForBattleV5712()}</span>`;
+}
+
+if(typeof renderEquip==='function'){
+  const renderEquipBaseV5712=renderEquip;
+  renderEquip=function(){
+    const r=renderEquipBaseV5712.apply(this,arguments);
+    removeCurrentEquipmentV5712();
+    return r;
+  };
+}
+
+if(typeof renderBattle==='function'){
+  const renderBattleBaseV5712=renderBattle;
+  renderBattle=function(){
+    const r=renderBattleBaseV5712.apply(this,arguments);
+    forceBattleFaceV5712();
+    return r;
+  };
+}
+
+if(typeof startBattle==='function'){
+  const startBattleBaseV5712=startBattle;
+  startBattle=function(){
+    const r=startBattleBaseV5712.apply(this,arguments);
+    setTimeout(forceBattleFaceV5712,0);
+    return r;
+  };
+}
+
+setTimeout(()=>{
+  removeCurrentEquipmentV5712();
+  const avatar=document.querySelector('#playerAvatar');
+  if(avatar){
+    forceBattleFaceV5712();
+    const obs=new MutationObserver(()=>{
+      const desired=getGrandpaFaceForBattleV5712();
+      if((avatar.textContent||'').trim()!==desired){
+        avatar.innerHTML=`<span class="battle-grandpa-face-v5712">${desired}</span>`;
+      }
+    });
+    obs.observe(avatar,{childList:true,subtree:true,characterData:true});
+  }
+},0);

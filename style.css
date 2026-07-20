@@ -599,3 +599,17 @@
     font-size:17px !important;
   }
 }
+
+/* ===== v5.7.12 battle face only ===== */
+.battle-avatar-v5712{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  min-width:88px !important;
+  min-height:88px !important;
+}
+.battle-grandpa-face-v5712{
+  display:inline-block !important;
+  font-size:76px !important;
+  line-height:1 !important;
+}

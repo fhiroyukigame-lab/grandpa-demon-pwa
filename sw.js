@@ -1,7 +1,7 @@
-const CACHE_NAME='grandpa-demon-v5711-title-rebuild-20260720';
+const CACHE_NAME='grandpa-demon-v5712-battle-face-ui-clean-20260720';
 const APP_SHELL=[
-'./','./index.html','./style.css?v=5.7.11','./app.js?v=5.7.11',
-'./manifest.webmanifest?v=5.7.11','./icon-192.png','./icon-512.png'
+'./','./index.html','./style.css?v=5.7.12','./app.js?v=5.7.12',
+'./manifest.webmanifest?v=5.7.12','./icon-192.png','./icon-512.png'
 ];
 self.addEventListener('install',event=>{
   self.skipWaiting();
