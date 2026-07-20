@@ -279,3 +279,145 @@ function initCleanBuild(){
 setTimeout(initCleanBuild,0);
 
 ['detailClose','helpClose','skillsClose'].forEach(id=>{const b=$('#'+id);if(b)b.onclick=()=>b.closest('.modal').classList.add('hidden')});
+
+
+/* ===== BUILD 5.7.1 FINAL FIXES ===== */
+
+/* ---------- Single persistent grandpa face ---------- */
+const GRANDPA_FACE_POOL_V571=['👴','🧓','👨‍🦳','👨‍🦲'];
+function ensureGrandpaFaceIndexV571(){
+  if(typeof state.grandpaFaceIndex!=='number'){
+    state.grandpaFaceIndex=Math.floor(Math.random()*GRANDPA_FACE_POOL_V571.length);
+    save();
+  }
+  return state.grandpaFaceIndex;
+}
+function grandpaFaceV571(){
+  return GRANDPA_FACE_POOL_V571[ensureGrandpaFaceIndexV571()%GRANDPA_FACE_POOL_V571.length];
+}
+
+/* ---------- Status card layout ---------- */
+function renderGrandpaStatusClean(){
+  const hero=document.querySelector('.hero');
+  if(!hero)return;
+  hero.style.display='';
+  hero.className='hero card grandpa-status-card-v571';
+
+  hero.innerHTML=`
+    <div class="grandpa-left-v571">
+      <div class="grandpa-name-v571" id="playerNameDisplay">${state.playerName||'じいさん'}</div>
+      <div class="grandpa-face-v571">${grandpaFaceV571()}</div>
+    </div>
+    <div class="grandpa-right-v571">
+      <div class="grandpa-stat-line-v571"><span>HP</span><b id="hpStat"></b></div>
+      <div class="grandpa-stat-line-v571"><span>攻撃</span><b id="atkStat"></b></div>
+      <div class="grandpa-stat-line-v571"><span>防御</span><b id="defStat"></b></div>
+      <div class="grandpa-stat-line-v571"><span>速度</span><b id="spdStat"></b></div>
+      <div class="grandpa-stat-line-v571"><span>会心</span><b id="critStat"></b></div>
+      <div class="grandpa-stat-line-v571"><span>回避</span><b id="evaStat"></b></div>
+      <div class="grandpa-stat-line-v571"><span>HP吸収</span><b id="lifestealStat"></b></div>
+    </div>
+    <div class="grandpa-actions-v571">
+      <button id="statusDetailBtn">ステータス詳細</button>
+      <button id="statusHelpBtn">ヘルプ</button>
+      <button id="learnedSkillsBtn">スキル</button>
+    </div>`;
+
+  const s=stats();
+  safeText('#hpStat',s.hp);
+  safeText('#atkStat',s.atk);
+  safeText('#defStat',s.def);
+  safeText('#spdStat',s.spd);
+  safeText('#critStat',s.crit+'%');
+  safeText('#evaStat',s.eva+'%');
+  safeText('#lifestealStat',Math.round((s.lifesteal||0)*100)+'%');
+
+  if(typeof bindStatusButtonsV570==='function') bindStatusButtonsV570();
+  else if(typeof bindHeroButtonsV52==='function') bindHeroButtonsV52();
+}
+
+/* ---------- Battle face uses exactly the same face as status card ---------- */
+function renderBattleGrandpaFaceOnlyClean(){
+  const el=document.querySelector('#playerAvatar');
+  if(el){
+    el.innerHTML=`<span class="battle-grandpa-face-v571">${grandpaFaceV571()}</span>`;
+  }
+}
+if(typeof renderBattle==='function'){
+  const _renderBattle571=renderBattle;
+  renderBattle=function(){
+    const r=_renderBattle571.apply(this,arguments);
+    renderBattleGrandpaFaceOnlyClean();
+    return r;
+  };
+}
+
+/* ---------- Immediate, reliable button SE ---------- */
+function playGeneralButtonSEV571(){
+  try{
+    if(!buttonSe)return;
+    buttonSe.pause();
+    buttonSe.currentTime=0;
+    buttonSe.playbackRate=1.08;
+    if(typeof audioSettingsV570!=='undefined')buttonSe.volume=audioSettingsV570.se;
+    const p=buttonSe.play();
+    if(p&&p.catch)p.catch(()=>{});
+  }catch(e){}
+}
+
+/* Use pointerdown so SE starts immediately on tap.
+   Demon Castle keeps its dedicated SE and is excluded from normal SE. */
+document.addEventListener('pointerdown',ev=>{
+  const btn=ev.target.closest&&ev.target.closest('button');
+  if(!btn || btn.disabled)return;
+  if(btn.classList.contains('tab') && btn.dataset.tab==='battle')return;
+  playGeneralButtonSEV571();
+},{passive:true});
+
+/* ---------- Options from title screen ---------- */
+function openTitleOptionsV571(){
+  const title=document.querySelector('#titleScreen');
+  const options=document.querySelector('#options');
+  if(title)title.classList.add('hidden');
+  if(options){
+    options.classList.add('active');
+    options.style.display='block';
+  }
+  if(typeof bindAudioOptionsV570==='function')bindAudioOptionsV570();
+  if(typeof applyAudioVolumesV570==='function')applyAudioVolumesV570();
+
+  let close=document.querySelector('#closeTitleOptionsV571');
+  if(!close && options){
+    close=document.createElement('button');
+    close.id='closeTitleOptionsV571';
+    close.className='close-title-options-v571';
+    close.textContent='閉じる';
+    options.appendChild(close);
+  }
+  if(close){
+    close.onclick=()=>{
+      if(options){
+        options.classList.remove('active');
+        options.style.display='none';
+      }
+      if(title)title.classList.remove('hidden');
+    };
+  }
+}
+const titleOptionsBtnV571=document.querySelector('#titleOptionsBtnV571');
+if(titleOptionsBtnV571)titleOptionsBtnV571.onclick=openTitleOptionsV571;
+
+/* Prevent options from being treated as a normal in-game tab. */
+const optionsPanelV571=document.querySelector('#options');
+if(optionsPanelV571 && !optionsPanelV571.classList.contains('active')){
+  optionsPanelV571.style.display='none';
+}
+
+/* Refresh status face and battle face consistency on startup. */
+setTimeout(()=>{
+  if(typeof state!=='undefined'){
+    ensureGrandpaFaceIndexV571();
+    const active=document.querySelector('.panel.active');
+    if(active && active.id==='equip')renderGrandpaStatusClean();
+  }
+},0);
