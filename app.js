@@ -10186,7 +10186,7 @@ function skillGacha(){
 }
 function renderSkills(){const root=$('#skillList');root.innerHTML='';const names=Object.keys(state.skills);if(!names.length){root.innerHTML='<p class="item-meta">まだスキルを持っていません。</p>';return}names.forEach(name=>{const sk=SKILLS.find(x=>x.name===name),on=state.equippedSkills.includes(name);const d=document.createElement('div');d.className='skill-card';d.innerHTML=`<div><b>${name} Lv.${state.skills[name]}</b><div class="item-meta">${sk.desc}</div></div><button>${on?'装備中':'装備'}</button>`;d.querySelector('button').onclick=()=>{if(on)state.equippedSkills=state.equippedSkills.filter(x=>x!==name);else{if(state.equippedSkills.length>=3)return alert('スキルは3つまでです');state.equippedSkills.push(name)}render()};root.appendChild(d)})}
 function enemyForFloor(f){if(f===30)return{name:'大魔王ヴァルガス',avatar:'😈',hp:1900,atk:82,def:30,spd:48,reward:2200,boss:true,demon:true};if(f===20)return{name:'冥界竜ネクロス',avatar:'🐲',hp:1100,atk:60,def:23,spd:44,reward:1000,boss:true};if(f===10)return{name:'獄炎将軍ガルド',avatar:'👹',hp:560,atk:40,def:16,spd:42,reward:500,boss:true};const b=ENEMIES[Math.min(ENEMIES.length-1,Math.floor((f-1)/5))],m=1+(f-1)*.13;return{...b,hp:Math.round(b.hp*m),atk:Math.round(b.atk*(1+(f-1)*.09)),def:Math.round(b.def*(1+(f-1)*.07)),reward:Math.round(b.reward*m)}}
-function beginBattleNow(){playBgm(battleBgm);clearInterval(battleTimer);const ps=stats(),en=enemyForFloor(state.selectedFloor);battle={floor:state.selectedFloor,p:{...ps,maxHp:ps.hp,currentHp:ps.hp,next:0,boostUntil:0,guard:false,parry:false,counter:false,critBoost:false},e:{...en,maxHp:en.hp,currentHp:en.hp,next:0},tick:0};cooldowns=[0,0,0];$('#battleArea').classList.remove('hidden');$('#enemyName').textContent=en.name;const enemyEl=$('#enemyAvatar'),playerEl=$('#playerAvatar');enemyEl.textContent=en.avatar;enemyEl.className='avatar'+(en.boss?' boss-aura':'')+(en.demon?' demon-aura':'');renderGrandpa(playerEl);playerEl.classList.remove('battle-enter-left','enemy-defeated');enemyEl.classList.remove('battle-enter-right','enemy-defeated');void playerEl.offsetWidth;void enemyEl.offsetWidth;playerEl.classList.add('battle-enter-left');enemyEl.classList.add('battle-enter-right');setTimeout(()=>{playerEl.classList.remove('battle-enter-left');enemyEl.classList.remove('battle-enter-right')},820);$('#battleLog').innerHTML='';log(`第${battle.floor}階、${en.name}が現れた！`);updateBattleUI();battleTimer=setInterval(stepBattle,100)}
+function beginBattleNow(){playBgm(battleBgm);clearInterval(battleTimer);const ps=stats(),en=enemyForFloor(state.selectedFloor);battle={floor:state.selectedFloor,p:{...ps,maxHp:ps.hp,currentHp:ps.hp,next:0,boostUntil:0,guard:false,parry:false,counter:false,critBoost:false},e:{...en,maxHp:en.hp,currentHp:en.hp,next:0},tick:0};cooldowns=[0,0,0];$('#battleArea').classList.remove('hidden');$('#enemyName').textContent=en.name;const enemyEl=$('#enemyAvatar'),playerEl=$('#playerAvatar');enemyEl.textContent=en.avatar;enemyEl.className='avatar'+(en.boss?' boss-aura':'')+(en.demon?' demon-aura':'');renderGrandpa(playerEl);playerEl.classList.remove('battle-enter-left','enemy-defeated');enemyEl.classList.remove('battle-enter-right','enemy-defeated');void playerEl.offsetWidth;void enemyEl.offsetWidth;playerEl.classList.add('battle-enter-left');enemyEl.classList.add('battle-enter-right');setTimeout(()=>{playerEl.classList.remove('battle-enter-left');enemyEl.classList.remove('battle-enter-right')},520);$('#battleLog').innerHTML='';log(`第${battle.floor}階、${en.name}が現れた！`);updateBattleUI();battleTimer=setInterval(stepBattle,55)}
 
 let battleIntroBusy=false;
 function startBattle(){
@@ -10198,14 +10198,14 @@ function startBattle(){
   intro.setAttribute('aria-hidden','false');
   void intro.offsetWidth;
   intro.classList.add('play');
-  setTimeout(()=>playAudio(clashSe,1.04),430);
+  setTimeout(()=>playAudio(clashSe,1.04),250);
   setTimeout(()=>{
     intro.classList.remove('play');
     intro.classList.add('hidden');
     intro.setAttribute('aria-hidden','true');
     battleIntroBusy=false;
     beginBattleNow();
-  },900);
+  },600);
 }
 function stepBattle(){if(!battle)return;battle.tick+=100;cooldowns=cooldowns.map(x=>Math.max(0,x-100));battle.p.next-=100;battle.e.next-=100;if(battle.p.next<=0){playerAttack();battle.p.next=100000/(battle.p.spd*(battle.p.boostUntil>battle.tick?1.5:1))}if(battle&&battle.e.next<=0){enemyAttack();if(battle)battle.e.next=100000/battle.e.spd}updateBattleUI()}
 function animateEl(el,cls){el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);setTimeout(()=>el.classList.remove(cls),400)}function floatText(target,text,cls=''){const f=document.createElement('div');f.className='float-text '+cls;f.textContent=text;target.appendChild(f);setTimeout(()=>f.remove(),950)}
@@ -10380,21 +10380,36 @@ function renderOwnedSkillsV570(){
   c.classList.remove('hidden');
   c.style.display='block';
 
-  const names=Object.keys((state&&state.skills)||{});
-  const rows=names.length
-    ? names.map(n=>{
-        const sk=getSkillDefClean(n);
-        const desc=sk&&(sk.desc||sk.effect)?(sk.desc||sk.effect):'パッシブスキル';
-        return `<div class="skill-owned-row-v5718">
-          <div class="skill-owned-main-v5718">
-            <div class="skill-owned-name-v5718">${n}${state.skills[n]>1?` Lv.${state.skills[n]}`:''}</div>
-            <div class="skill-owned-desc-v5718">${desc}</div>
-          </div>
-        </div>`;
-      }).join('')
-    : '<div class="inventory-empty-clean5715">まだスキルを習得していません。</div>';
+  const skills=(state&&state.skills)||{};
+  const names=Object.keys(skills);
 
-  c.innerHTML=`<h3 class="owned-skills-title-v5718">スキル</h3>${rows}`;
+  if(!names.length){
+    c.innerHTML=`
+      <h3 class="owned-skills-title-v5718">スキル</h3>
+      <div class="inventory-empty-clean5715">まだスキルを習得していません。</div>`;
+    return;
+  }
+
+  c.innerHTML=`
+    <h3 class="owned-skills-title-v5718">スキル</h3>
+    ${names.map(name=>{
+      let def=null;
+      try{
+        if(typeof getSkillDefClean==='function')def=getSkillDefClean(name);
+        if(!def && typeof SKILLS!=='undefined'){
+          if(Array.isArray(SKILLS))def=SKILLS.find(x=>x&&(x.name===name||x.id===name))||null;
+          else if(SKILLS&&SKILLS[name])def=SKILLS[name];
+        }
+      }catch(e){}
+      const desc=def&&(def.desc||def.effect)?(def.desc||def.effect):'パッシブスキル';
+      const lv=Number(skills[name])||1;
+      return `<div class="skill-owned-row-v5718">
+        <div class="skill-owned-main-v5718">
+          <div class="skill-owned-name-v5718">${name}${lv>1?` Lv.${lv}`:''}</div>
+          <div class="skill-owned-desc-v5718">${desc}</div>
+        </div>
+      </div>`;
+    }).join('')}`;
 }
 /* ---------- Audio options ---------- */
 function applyAudioVolumesV570(){[titleBgm,menuBgm,battleBgm,forgeBgm].forEach(a=>{if(a)a.volume=audioSettingsV570.bgm});[hitSe,buttonSe,equipButtonSe,slotButtonSe,rouletteSe,slotResultSe,clashSe,castleButtonSe].forEach(a=>{if(a)a.volume=audioSettingsV570.se});const b=$('#bgmVolumeV570'),s=$('#seVolumeV570');if(b)b.value=Math.round(audioSettingsV570.bgm*100);if(s)s.value=Math.round(audioSettingsV570.se*100);safeText('#bgmVolumeValueV570',Math.round(audioSettingsV570.bgm*100));safeText('#seVolumeValueV570',Math.round(audioSettingsV570.se*100));}
@@ -10549,25 +10564,18 @@ function switchTab(tab,btn){
   const apply=()=>{
     document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));
     if(btn)btn.classList.add('active');
+
     const panel=document.querySelector('#'+tab);
     if(panel)panel.classList.add('active');
 
     const hero=document.querySelector('.hero');
-    if(hero){
-      if(tab==='equip'){
-        hero.style.display='';
-        renderGrandpaStatusClean();
-      }else{
-        hero.style.display='none';
-      }
-    }
+    if(hero)hero.style.display=(tab==='equip')?'':'none';
 
     if(tab==='equip'){
       playBgm(menuBgm);
       renderEquip();
       renderOwnedEquipmentClean5715();
-      if(typeof renderOwnedSkillsV570==='function')renderOwnedSkillsV570();
-      bindSkillToggleClean5715();
+      renderOwnedSkillsV570();
       renderGrandpaStatusClean();
     }else if(tab==='gacha'){
       playBgm(titleBgm);
@@ -10582,6 +10590,7 @@ function switchTab(tab,btn){
       safeTextClean('#maxFloor',state.maxFloor);
       safeTextClean('#selectedFloor',state.selectedFloor);
     }
+
     save();
   };
 
@@ -10865,7 +10874,11 @@ function renderGrandpaStatusClean(){
   if(!hero)return;
 
   const equipPanel=document.querySelector('#equip');
-  if(equipPanel && !equipPanel.classList.contains('active')){
+  const battlePanel=document.querySelector('#battle');
+  const isEquip=!!(equipPanel&&equipPanel.classList.contains('active'));
+  const isBattle=!!(battlePanel&&battlePanel.classList.contains('active'));
+
+  if(!isEquip || isBattle){
     hero.style.display='none';
     return;
   }
@@ -10897,22 +10910,18 @@ function renderGrandpaStatusClean(){
   const detail=document.querySelector('#statusDetailBtn');
   const help=document.querySelector('#statusHelpBtn');
 
-  if(detail){
-    detail.onclick=()=>{
-      if(typeof showStatusDetailV570==='function')showStatusDetailV570();
-      else{
-        const modal=document.querySelector('#detailModal');
-        if(modal)modal.classList.remove('hidden');
-      }
-    };
-  }
-
-  if(help){
-    help.onclick=()=>{
-      const modal=document.querySelector('#helpModal');
+  if(detail)detail.onclick=()=>{
+    if(typeof showStatusDetailV570==='function')showStatusDetailV570();
+    else{
+      const modal=document.querySelector('#detailModal');
       if(modal)modal.classList.remove('hidden');
-    };
-  }
+    }
+  };
+
+  if(help)help.onclick=()=>{
+    const modal=document.querySelector('#helpModal');
+    if(modal)modal.classList.remove('hidden');
+  };
 }
 
 /* ---------- Owned equipment list ---------- */

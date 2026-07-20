@@ -774,3 +774,14 @@
     transform:scale(1.12);
   }
 }
+
+/* ===== v5.7.19 castle hide + skill visibility ===== */
+#ownedSkillsToggleV570{
+  display:none !important;
+}
+#ownedSkillsContentV570{
+  display:block !important;
+}
+body:has(#battle.active) .hero{
+  display:none !important;
+}
