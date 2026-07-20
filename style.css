@@ -489,3 +489,113 @@
     font-size:18px !important;
   }
 }
+
+
+/* ===== v5.7.11 TITLE SCREEN REBUILD ===== */
+#titleScreen.title-screen{
+  position:fixed !important;
+  inset:0 !important;
+  z-index:100 !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  box-sizing:border-box !important;
+  padding:
+    max(env(safe-area-inset-top), 22px)
+    18px
+    max(env(safe-area-inset-bottom), 28px) !important;
+  text-align:center !important;
+}
+#titleScreen.title-screen.hidden{
+  display:none !important;
+}
+#titleScreen .title-content{
+  position:relative !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  justify-content:flex-start !important;
+  width:min(100%, 430px) !important;
+  max-width:430px !important;
+  min-width:0 !important;
+  margin:0 auto !important;
+  padding:26px 20px !important;
+  box-sizing:border-box !important;
+  border-radius:28px !important;
+}
+#titleScreen .title-content h1{
+  width:100% !important;
+  margin:0 !important;
+  padding:0 !important;
+  writing-mode:horizontal-tb !important;
+  text-orientation:mixed !important;
+  white-space:normal !important;
+  word-break:keep-all !important;
+  overflow-wrap:normal !important;
+  text-align:center !important;
+  font-size:34px !important;
+  line-height:1.22 !important;
+}
+#titleScreen .title-version{
+  width:100% !important;
+  margin:10px 0 16px !important;
+  text-align:center !important;
+  writing-mode:horizontal-tb !important;
+  font-size:16px !important;
+}
+#titleScreen .title-btn{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+  min-height:64px !important;
+  height:auto !important;
+  margin:12px 0 0 !important;
+  padding:14px 16px !important;
+  box-sizing:border-box !important;
+  writing-mode:horizontal-tb !important;
+  text-orientation:mixed !important;
+  white-space:nowrap !important;
+  word-break:keep-all !important;
+  overflow-wrap:normal !important;
+  text-align:center !important;
+  font-size:19px !important;
+  font-weight:800 !important;
+  line-height:1.2 !important;
+  border-radius:18px !important;
+}
+#titleScreen #qrResultBox{
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+  margin:12px 0 0 !important;
+  box-sizing:border-box !important;
+}
+#titleScreen .title-sun{
+  position:absolute !important;
+  right:9% !important;
+  top:12% !important;
+  font-size:56px !important;
+  pointer-events:none !important;
+}
+@media(max-width:390px){
+  #titleScreen.title-screen{
+    padding-left:14px !important;
+    padding-right:14px !important;
+  }
+  #titleScreen .title-content{
+    width:100% !important;
+    padding:22px 16px !important;
+  }
+  #titleScreen .title-content h1{
+    font-size:30px !important;
+  }
+  #titleScreen .title-btn{
+    min-height:60px !important;
+    font-size:17px !important;
+  }
+}
