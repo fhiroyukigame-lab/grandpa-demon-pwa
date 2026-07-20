@@ -1,7 +1,7 @@
-const CACHE_NAME='grandpa-demon-v578-inline-jsqr-20260720';
+const CACHE_NAME='grandpa-demon-v579-ui-cleanup-20260720';
 const APP_SHELL=[
-'./','./index.html','./style.css?v=5.7.8','./app.js?v=5.7.8',
-'./manifest.webmanifest?v=5.7.8','./icon-192.png','./icon-512.png'
+'./','./index.html','./style.css?v=5.7.9','./app.js?v=5.7.9',
+'./manifest.webmanifest?v=5.7.9','./icon-192.png','./icon-512.png'
 ];
 self.addEventListener('install',event=>{
   self.skipWaiting();

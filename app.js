@@ -10631,7 +10631,41 @@ function hashStringClean(str){let h=2166136261>>>0;for(let i=0;i<str.length;i++)
 function seededValueClean(seed,salt,min,max){let x=(seed^Math.imul(salt,2654435761))>>>0;x^=x>>>16;x=Math.imul(x,2246822507);x^=x>>>13;x=Math.imul(x,3266489909);x^=x>>>16;return min+(x%(max-min+1));}
 function availableSkillNamesClean(){if(typeof SKILLS==='undefined')return[];if(Array.isArray(SKILLS))return SKILLS.map(x=>x&&x.name).filter(Boolean);return Object.keys(SKILLS);}
 function qrCharacterFromTextClean(text){const seed=hashStringClean(text),names=(typeof GRANDPA_NAMES!=='undefined'&&GRANDPA_NAMES.length?GRANDPA_NAMES:['ゲンゾウ','トラキチ','タツノスケ','ゴンゾウ']),skills=availableSkillNamesClean();return{qrHash:String(seed),playerName:names[seed%names.length],faceIndex:seededValueClean(seed,23,0,49),grandpaFaceIndex:seededValueClean(seed,29,0,3),baseStats:{hp:seededValueClean(seed,31,90,115),atk:seededValueClean(seed,37,8,13),def:seededValueClean(seed,41,4,8),spd:seededValueClean(seed,43,45,55),crit:seededValueClean(seed,47,2,7),eva:seededValueClean(seed,53,1,5)},initialSkill:skills.length?skills[seededValueClean(seed,17,0,skills.length-1)]:null};}
-function showQrCharacterResultClean(c){const b=document.querySelector('#qrResultBox');if(!b)return;pendingQrCharacterClean=c;b.classList.remove('hidden');b.innerHTML=`<div class="qr-result-title">QRじいさん候補</div><div class="qr-result-name">${c.playerName}</div><div class="qr-result-stats">HP ${c.baseStats.hp} / 攻撃 ${c.baseStats.atk} / 防御 ${c.baseStats.def}<br>速度 ${c.baseStats.spd} / 会心 ${c.baseStats.crit}% / 回避 ${c.baseStats.eva}%</div><div class="qr-result-skill">初期スキル：${c.initialSkill||'なし'}</div><button id="startQrGameBtn" class="primary title-main-btn">このじいさんでニューゲーム</button>`;document.querySelector('#startQrGameBtn').onclick=startQrNewGameClean;}
+
+function showQrCharacterResultClean(char){
+  const box=document.querySelector('#qrResultBox');
+  if(!box)return;
+  pendingQrCharacterClean=char;
+  const skill=char.initialSkill||'なし';
+  const face=(typeof GRANDPA_FACES_CLEAN!=='undefined')
+    ? GRANDPA_FACES_CLEAN[char.grandpaFaceIndex%GRANDPA_FACES_CLEAN.length]
+    : '👴';
+
+  box.classList.remove('hidden');
+  box.innerHTML=`
+    <div class="qr-status-card-v579">
+      <div class="qr-status-left-v579">
+        <div class="qr-status-name-v579">${char.playerName}</div>
+        <div class="qr-status-face-v579">${face}</div>
+      </div>
+      <div class="qr-status-right-v579">
+        <div class="qr-stat-line-v579"><span>HP</span><b>${char.baseStats.hp}</b></div>
+        <div class="qr-stat-line-v579"><span>攻撃</span><b>${char.baseStats.atk}</b></div>
+        <div class="qr-stat-line-v579"><span>防御</span><b>${char.baseStats.def}</b></div>
+        <div class="qr-stat-line-v579"><span>速度</span><b>${char.baseStats.spd}</b></div>
+        <div class="qr-stat-line-v579"><span>会心</span><b>${char.baseStats.crit}%</b></div>
+        <div class="qr-stat-line-v579"><span>回避</span><b>${char.baseStats.eva}%</b></div>
+      </div>
+      <div class="qr-skill-v579">
+        <span>初期スキル</span>
+        <b>${skill}</b>
+      </div>
+      <button id="startQrGameBtn" class="title-btn qr-start-btn-v579">このじいさんでニューゲーム</button>
+    </div>`;
+  const btn=document.querySelector('#startQrGameBtn');
+  if(btn)btn.onclick=startQrNewGameClean;
+}
+
 function applyQrCharacterToStateClean(c){state=migrate(null);state.playerName=c.playerName;state.grandpaFaceIndex=c.grandpaFaceIndex;state.faceId=c.faceIndex;state.qrHash=c.qrHash;state.qrBaseStats=c.baseStats;state.skills={};if(c.initialSkill)state.skills[c.initialSkill]=1;}
 function startQrNewGameClean(){if(!pendingQrCharacterClean)return;if(localStorage.getItem('grandpaDemonSave')&&!confirm('現在のセーブデータを消してQRじいさんでニューゲームを始めますか？'))return;localStorage.removeItem('grandpaDemonSave');applyQrCharacterToStateClean(pendingQrCharacterClean);save();enterGame();const b=document.querySelector('.tab[data-tab="equip"]');if(b)switchTab('equip',b);}
 function stopQrScannerClean(){
@@ -10679,3 +10713,23 @@ const baseStatsFunction574=stats;stats=function(){const s=baseStatsFunction574()
     }
   }catch(e){}
 })();
+
+
+/* ===== v5.7.9 UI cleanup ===== */
+function removeCurrentEquipmentV579(){
+  document.querySelectorAll('h2').forEach(h=>{
+    if((h.textContent||'').trim()==='現在の装備'){
+      const box=h.closest('section,.card');
+      if(box)box.remove();
+    }
+  });
+}
+if(typeof renderEquip==='function'){
+  const renderEquipV579Base=renderEquip;
+  renderEquip=function(){
+    const r=renderEquipV579Base.apply(this,arguments);
+    removeCurrentEquipmentV579();
+    return r;
+  };
+}
+setTimeout(removeCurrentEquipmentV579,0);

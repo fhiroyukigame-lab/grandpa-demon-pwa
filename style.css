@@ -285,3 +285,106 @@
   }
   #titleScreen .name-generate-btn{min-height:54px;height:54px}
 }
+
+
+/* ===== v5.7.9 UI cleanup ===== */
+#titleScreen .title-grandpa,
+#titleScreen .name-generator{
+  display:none !important;
+}
+
+.qr-result-box{
+  padding:0;
+  border:0;
+  background:transparent;
+}
+.qr-status-card-v579{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 150px;
+  grid-template-areas:
+    "left right"
+    "skill skill"
+    "button button";
+  gap:16px 18px;
+  padding:20px;
+  border-radius:20px;
+  background:rgba(20,18,16,.78);
+  border:1px solid rgba(255,255,255,.14);
+}
+.qr-status-left-v579{
+  grid-area:left;
+  display:grid;
+  grid-template-rows:1fr 2fr;
+  align-items:center;
+  justify-items:center;
+}
+.qr-status-name-v579{
+  width:100%;
+  text-align:center;
+  font-size:22px;
+  font-weight:800;
+}
+.qr-status-face-v579{
+  font-size:86px;
+  line-height:1;
+}
+.qr-status-right-v579{
+  grid-area:right;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  justify-content:center;
+}
+.qr-stat-line-v579{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:7px 9px;
+  border-radius:11px;
+  background:rgba(255,255,255,.045);
+  font-size:13px;
+}
+.qr-stat-line-v579 span{opacity:.68}
+.qr-stat-line-v579 b{font-size:15px}
+.qr-skill-v579{
+  grid-area:skill;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  border-radius:12px;
+  background:rgba(255,255,255,.045);
+  font-size:14px;
+}
+.qr-start-btn-v579{
+  grid-area:button;
+  width:100%;
+  margin-top:0 !important;
+}
+#ownedSkillsBoxV570,
+.owned-skills-box-v570{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+#ownedSkillsToggleV570,
+.owned-skills-toggle-v570{
+  width:min(100%, 360px) !important;
+  margin-left:auto !important;
+  margin-right:auto !important;
+}
+#ownedSkillsContentV570,
+.owned-skills-content-v570{
+  width:100%;
+}
+@media(max-width:430px){
+  .qr-status-card-v579{
+    grid-template-columns:minmax(0,1fr) 138px;
+  }
+  .qr-status-name-v579{font-size:20px}
+  .qr-status-face-v579{font-size:78px}
+  .qr-stat-line-v579{font-size:12px}
+  .qr-stat-line-v579 b{font-size:14px}
+}
