@@ -562,3 +562,16 @@ async function startQrScannerClean(){
 }
 function bindQrUiClean(){const o=document.querySelector('#qrGenerateBtn'),c=document.querySelector('#qrScannerClose');if(o)o.onclick=startQrScannerClean;if(c)c.onclick=stopQrScannerClean;}
 const baseStatsFunction574=stats;stats=function(){const s=baseStatsFunction574(),q=state&&state.qrBaseStats;if(!q)return s;s.hp+=(q.hp-100);s.atk+=(q.atk-10);s.def+=(q.def-5);s.spd+=(q.spd-50);s.crit+=(q.crit-5);s.eva+=(q.eva-3);return s;};
+
+
+/* FORCE UPDATE 5.7.7 */
+(function(){
+  try{
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(reg=>reg.update().catch(()=>{})));
+    }
+    if('caches' in window){
+      caches.keys().then(keys=>keys.filter(k=>k!=='grandpa-demon-v577-20260720').forEach(k=>caches.delete(k)));
+    }
+  }catch(e){}
+})();
