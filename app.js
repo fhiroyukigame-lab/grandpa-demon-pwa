@@ -10193,11 +10193,11 @@ function setHeroForge(on){const hero=$('.hero');if(on){hero.classList.add('forge
 const heroElV54=document.querySelector('.hero');const tabsElV54=document.querySelector('.tabs');
 function placeHeroForTabV54(tab){const mount=$('#battleHeroMount');if(tab==='battle'&&mount&&heroElV54){mount.appendChild(heroElV54)}else if(heroElV54&&tabsElV54&&tabsElV54.parentNode){tabsElV54.parentNode.insertBefore(heroElV54,tabsElV54)}}
 
-function enterGame(){playBgm(menuBgm);$('#titleScreen').classList.add('hidden');$('#gameApp').classList.remove('hidden');render()}function showTitle(){stopBgms();$('#gameApp').classList.add('hidden');$('#titleScreen').classList.remove('hidden');$('#continueBtn').disabled=!localStorage.getItem('grandpaDemonSave')}
+function enterGame(){playBgm(menuBgm);$('#titleScreen').classList.add('hidden');$('#gameApp').classList.remove('hidden');render()}function showTitle(){stopBgms();$('#gameApp').classList.add('hidden');$('#titleScreen').classList.remove('hidden');const cb=$('#continueBtn');if(cb)cb.disabled=!localStorage.getItem('grandpaDemonSave');playBgm(titleBgm)}
 let titleAudioUnlocked=true;
-$('#newGameBtn').onclick=()=>{playSE();if(localStorage.getItem('grandpaDemonSave')&&!confirm('現在のセーブデータを消してニューゲームを始めますか？'))return;localStorage.removeItem('grandpaDemonSave');state=migrate(null);save();setTimeout(enterGame,180)};$('#continueBtn').onclick=()=>{playSE();state=migrate(load());setTimeout(enterGame,180)};
+const newGameBtnLegacy=$('#newGameBtn');if(newGameBtnLegacy)newGameBtnLegacy.onclick=()=>{playSE();if(localStorage.getItem('grandpaDemonSave')&&!confirm('現在のセーブデータを消してニューゲームを始めますか？'))return;localStorage.removeItem('grandpaDemonSave');state=migrate(null);save();setTimeout(enterGame,180)};const continueBtnSafe=$('#continueBtn');if(continueBtnSafe)continueBtnSafe.onclick=()=>{playSE();state=migrate(load());setTimeout(enterGame,180)};
 $('#gearGacha').onclick=gearGacha;$('#skillGacha').onclick=skillGacha;
-document.addEventListener('pointerdown',e=>{const btn=e.target.closest&&e.target.closest('button');if(!btn||btn.disabled)return;if(btn.matches('.tab[data-tab=\"battle\"]')){playAudio(castleButtonSe,1);return;}if(btn.matches('[data-equip]')||btn.id==='gearGacha')return;playSE()},{passive:true});
+document.addEventListener('pointerdown',e=>{const btn=e.target.closest&&e.target.closest('button');if(!btn||btn.disabled)return;if(btn.matches('.tab[data-tab=\"battle\"]')){playSE();return;}if(btn.matches('[data-equip]')||btn.id==='gearGacha')return;playSE()},{passive:true});
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab,b));$('#minusFloor').onclick=()=>{state.selectedFloor=Math.max(1,state.selectedFloor-1);render()};$('#plusFloor').onclick=()=>{state.selectedFloor=Math.min(30,Math.max(state.maxFloor+1,1),state.selectedFloor+1);render()};$('#startBattle').onclick=startBattle;const skillPowerBtn=$('#skillPower'),skillDodgeBtn=$('#skillDodge'),skillThrowBtn=$('#skillThrow');if(skillPowerBtn)skillPowerBtn.onclick=()=>useSkill(0);if(skillDodgeBtn)skillDodgeBtn.onclick=()=>useSkill(1);if(skillThrowBtn)skillThrowBtn.onclick=()=>useSkill(2);$('#resetSave').onclick=()=>{if(confirm('本当にセーブデータを初期化しますか？')){localStorage.removeItem('grandpaDemonSave');location.reload()}};
 if('serviceWorker'in navigator){let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;location.reload()});window.addEventListener('load',async()=>{try{const r=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});if(r.waiting)r.waiting.postMessage({type:'SKIP_WAITING'});r.addEventListener('updatefound',()=>{const w=r.installing;if(w)w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)w.postMessage({type:'SKIP_WAITING'})})})}catch(e){console.warn(e)}})}
 showTitle();
@@ -10667,7 +10667,14 @@ function showQrCharacterResultClean(char){
 }
 
 function applyQrCharacterToStateClean(c){state=migrate(null);state.playerName=c.playerName;state.grandpaFaceIndex=c.grandpaFaceIndex;state.faceId=c.faceIndex;state.qrHash=c.qrHash;state.qrBaseStats=c.baseStats;state.skills={};if(c.initialSkill)state.skills[c.initialSkill]=1;}
-function startQrNewGameClean(){if(!pendingQrCharacterClean)return;if(localStorage.getItem('grandpaDemonSave')&&!confirm('現在のセーブデータを消してQRじいさんでニューゲームを始めますか？'))return;localStorage.removeItem('grandpaDemonSave');applyQrCharacterToStateClean(pendingQrCharacterClean);save();enterGame();const b=document.querySelector('.tab[data-tab="equip"]');if(b)switchTab('equip',b);}
+function startQrNewGameClean(){
+if(!pendingQrCharacterClean)return;
+if(localStorage.getItem('grandpaDemonSave')&&!confirm('現在のセーブデータを消してQRじいさんでニューゲームを始めますか？'))return;
+localStorage.removeItem('grandpaDemonSave');applyQrCharacterToStateClean(pendingQrCharacterClean);save();
+const qrSe=document.querySelector('#qrStartSe');let moved=false;
+const moveToGame=()=>{if(moved)return;moved=true;enterGame();const b=document.querySelector('.tab[data-tab="equip"]');if(b)switchTab('equip',b);};
+if(qrSe){try{qrSe.pause();qrSe.currentTime=0;qrSe.volume=1;qrSe.onended=moveToGame;const p=qrSe.play();if(p&&p.catch)p.catch(()=>moveToGame());setTimeout(moveToGame,3000);}catch(e){moveToGame();}}else moveToGame();
+}
 function stopQrScannerClean(){
   if(qrScanTimerClean){cancelAnimationFrame(qrScanTimerClean);qrScanTimerClean=null;}
   if(qrStreamClean){qrStreamClean.getTracks().forEach(t=>t.stop());qrStreamClean=null;}
@@ -10804,3 +10811,8 @@ setTimeout(()=>{
     obs.observe(avatar,{childList:true,subtree:true,characterData:true});
   }
 },0);
+
+/* v5.7.13: iOS title BGM unlock */
+(function(){const t=document.querySelector('#titleScreen'),a=document.querySelector('#titleBgm');if(!t||!a)return;
+const f=()=>{if(!t.classList.contains('hidden')&&a.paused){try{const p=a.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}}};
+t.addEventListener('pointerdown',f,{passive:true});t.addEventListener('touchstart',f,{passive:true});})();
