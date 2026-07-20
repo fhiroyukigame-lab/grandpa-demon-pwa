@@ -1,6 +1,6 @@
-const CACHE_NAME='grandpa-demon-v5717-overwrite-clean-20260720';
+const CACHE_NAME='grandpa-demon-v5718-status-skill-fight-castle-20260720';
 const APP_SHELL=[
-'./','./index.html','./style.css?v=5.7.17-clean','./app.js?v=5.7.17-clean',
+'./','./index.html','./style.css?v=5.7.18','./app.js?v=5.7.18',
 './manifest.webmanifest?v=5.7.12','./icon-192.png','./icon-512.png'
 ];
 self.addEventListener('install',event=>{

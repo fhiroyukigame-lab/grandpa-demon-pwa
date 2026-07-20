@@ -10381,19 +10381,20 @@ function renderOwnedSkillsV570(){
   c.style.display='block';
 
   const names=Object.keys((state&&state.skills)||{});
-  c.innerHTML=names.length
+  const rows=names.length
     ? names.map(n=>{
         const sk=getSkillDefClean(n);
         const desc=sk&&(sk.desc||sk.effect)?(sk.desc||sk.effect):'パッシブスキル';
-        return `<div class="skill-owned-row-v5717">
-          <div class="skill-owned-main-v5717">
-            <div class="skill-owned-label-v5717">スキル</div>
-            <div class="skill-owned-name-v5717">${n}${state.skills[n]>1?` Lv.${state.skills[n]}`:''}</div>
-            <div class="skill-owned-desc-v5717">${desc}</div>
+        return `<div class="skill-owned-row-v5718">
+          <div class="skill-owned-main-v5718">
+            <div class="skill-owned-name-v5718">${n}${state.skills[n]>1?` Lv.${state.skills[n]}`:''}</div>
+            <div class="skill-owned-desc-v5718">${desc}</div>
           </div>
         </div>`;
       }).join('')
     : '<div class="inventory-empty-clean5715">まだスキルを習得していません。</div>';
+
+  c.innerHTML=`<h3 class="owned-skills-title-v5718">スキル</h3>${rows}`;
 }
 /* ---------- Audio options ---------- */
 function applyAudioVolumesV570(){[titleBgm,menuBgm,battleBgm,forgeBgm].forEach(a=>{if(a)a.volume=audioSettingsV570.bgm});[hitSe,buttonSe,equipButtonSe,slotButtonSe,rouletteSe,slotResultSe,clashSe,castleButtonSe].forEach(a=>{if(a)a.volume=audioSettingsV570.se});const b=$('#bgmVolumeV570'),s=$('#seVolumeV570');if(b)b.value=Math.round(audioSettingsV570.bgm*100);if(s)s.value=Math.round(audioSettingsV570.se*100);safeText('#bgmVolumeValueV570',Math.round(audioSettingsV570.bgm*100));safeText('#seVolumeValueV570',Math.round(audioSettingsV570.se*100));}
@@ -10863,6 +10864,12 @@ function renderGrandpaStatusClean(){
   const hero=document.querySelector('.hero');
   if(!hero)return;
 
+  const equipPanel=document.querySelector('#equip');
+  if(equipPanel && !equipPanel.classList.contains('active')){
+    hero.style.display='none';
+    return;
+  }
+
   const p=getQrProfileClean5715();
   const s=stats();
 
@@ -10889,11 +10896,23 @@ function renderGrandpaStatusClean(){
 
   const detail=document.querySelector('#statusDetailBtn');
   const help=document.querySelector('#statusHelpBtn');
-  if(detail)detail.onclick=()=>{if(typeof showStatusDetailV52==='function')showStatusDetailV52()};
-  if(help)help.onclick=()=>{
-    const modal=document.querySelector('#helpModal');
-    if(modal)modal.classList.remove('hidden');
-  };
+
+  if(detail){
+    detail.onclick=()=>{
+      if(typeof showStatusDetailV570==='function')showStatusDetailV570();
+      else{
+        const modal=document.querySelector('#detailModal');
+        if(modal)modal.classList.remove('hidden');
+      }
+    };
+  }
+
+  if(help){
+    help.onclick=()=>{
+      const modal=document.querySelector('#helpModal');
+      if(modal)modal.classList.remove('hidden');
+    };
+  }
 }
 
 /* ---------- Owned equipment list ---------- */
