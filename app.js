@@ -10934,3 +10934,176 @@ if(typeof grandpaFaceClean==='function'){
 if(typeof getGrandpaFaceForBattleV5712==='function'){
   getGrandpaFaceForBattleV5712=function(){ return grandpaFaceFromStateV5714(); };
 }
+
+
+/* ===== v5.7.15 inventory + skill toggle + QR status sync ===== */
+
+/* ---------- QR data is the source of truth ---------- */
+function qrProfileV5715(){
+  return {
+    name: state && state.playerName ? state.playerName : 'じいさん',
+    faceIndex: state && typeof state.grandpaFaceIndex==='number' ? state.grandpaFaceIndex : 0,
+    baseStats: state && state.qrBaseStats ? state.qrBaseStats : null
+  };
+}
+
+function grandpaFaceFromStateV5715(){
+  try{
+    const p=qrProfileV5715();
+    if(typeof GRANDPA_FACES_CLEAN!=='undefined' && GRANDPA_FACES_CLEAN.length){
+      return GRANDPA_FACES_CLEAN[p.faceIndex % GRANDPA_FACES_CLEAN.length];
+    }
+  }catch(e){}
+  return '👴';
+}
+
+if(typeof grandpaFaceClean==='function'){
+  grandpaFaceClean=function(){ return grandpaFaceFromStateV5715(); };
+}
+if(typeof getGrandpaFaceForBattleV5712==='function'){
+  getGrandpaFaceForBattleV5712=function(){ return grandpaFaceFromStateV5715(); };
+}
+
+/* ---------- Rebuild status card from QR-saved profile ---------- */
+function renderGrandpaStatusClean(){
+  const hero=document.querySelector('.hero');
+  if(!hero)return;
+
+  const p=qrProfileV5715();
+  const s=stats();
+
+  hero.style.display='';
+  hero.className='hero card grandpa-status-card-clean';
+  hero.innerHTML=`
+    <div class="grandpa-left-clean">
+      <div class="grandpa-name-clean" id="playerNameDisplay">${p.name}</div>
+      <div class="grandpa-face-clean">${grandpaFaceFromStateV5715()}</div>
+    </div>
+    <div class="grandpa-right-clean">
+      <div class="grandpa-stat-clean"><span>HP</span><b>${s.hp}</b></div>
+      <div class="grandpa-stat-clean"><span>攻撃</span><b>${s.atk}</b></div>
+      <div class="grandpa-stat-clean"><span>防御</span><b>${s.def}</b></div>
+      <div class="grandpa-stat-clean"><span>速度</span><b>${s.spd}</b></div>
+      <div class="grandpa-stat-clean"><span>会心</span><b>${s.crit}%</b></div>
+      <div class="grandpa-stat-clean"><span>回避</span><b>${s.eva}%</b></div>
+      <div class="grandpa-stat-clean"><span>HP吸収</span><b>${Math.round((s.lifesteal||0)*100)}%</b></div>
+    </div>
+    <div class="grandpa-actions-clean">
+      <button id="statusDetailBtn">ステータス詳細</button>
+      <button id="statusHelpBtn">ヘルプ</button>
+    </div>`;
+
+  const detail=document.querySelector('#statusDetailBtn');
+  const help=document.querySelector('#statusHelpBtn');
+  if(detail)detail.onclick=()=>{if(typeof showStatusDetailV52==='function')showStatusDetailV52()};
+  if(help)help.onclick=()=>{
+    const modal=document.querySelector('#helpModal');
+    if(modal)modal.classList.remove('hidden');
+  };
+}
+
+/* ---------- Restore owned equipment list ---------- */
+function renderOwnedEquipmentV5715(){
+  const root=
+    document.querySelector('#inventory') ||
+    document.querySelector('.inventory-list') ||
+    document.querySelector('#ownedEquipment') ||
+    document.querySelector('.owned-equipment-list');
+
+  if(!root)return;
+
+  const items=(state && Array.isArray(state.inventory)) ? state.inventory :
+              (state && Array.isArray(state.items)) ? state.items : [];
+
+  if(!items.length){
+    root.innerHTML='<div class="inventory-empty-v5715">まだ装備を所持していません。</div>';
+    return;
+  }
+
+  root.innerHTML=items.map((item,idx)=>{
+    const equipped = !!item.equipped;
+    const name=item.name||'名称不明';
+    const slot=item.slot||item.category||'装備';
+    const statParts=[];
+    if(item.atk)statParts.push(`攻+${item.atk}`);
+    if(item.def)statParts.push(`防+${item.def}`);
+    if(item.hp)statParts.push(`HP+${item.hp}`);
+    if(item.spd)statParts.push(`速+${item.spd}`);
+    return `
+      <div class="inventory-row-v5715" data-inventory-index="${idx}">
+        <div class="inventory-main-v5715">
+          <div class="inventory-slot-v5715">${slot}</div>
+          <div class="inventory-name-v5715">${name}</div>
+          <div class="inventory-stats-v5715">${statParts.join(' / ')}</div>
+        </div>
+        <button class="inventory-equip-btn-v5715 ${equipped?'equipped':''}" data-index="${idx}">
+          ${equipped?'装備中':'装備'}
+        </button>
+      </div>`;
+  }).join('');
+
+  root.querySelectorAll('.inventory-equip-btn-v5715').forEach(btn=>{
+    btn.onclick=()=>{
+      const idx=Number(btn.dataset.index);
+      const item=items[idx];
+      if(!item)return;
+
+      if(typeof equipItem==='function'){
+        equipItem(idx);
+      }else{
+        // Fallback: mark one equipped per slot if legacy helper is unavailable.
+        items.forEach(x=>{
+          if((x.slot||x.category)===(item.slot||item.category))x.equipped=false;
+        });
+        item.equipped=true;
+        save();
+      }
+
+      renderOwnedEquipmentV5715();
+      renderGrandpaStatusClean();
+    };
+  });
+}
+
+/* ---------- Fix skill toggle ---------- */
+function bindSkillToggleV5715(){
+  const btn=document.querySelector('#ownedSkillsToggleV570') || document.querySelector('.owned-skills-toggle-v570');
+  const content=document.querySelector('#ownedSkillsContentV570') || document.querySelector('.owned-skills-content-v570');
+  const arrow=document.querySelector('#ownedSkillsArrowV570');
+
+  if(!btn || !content)return;
+
+  btn.onclick=()=>{
+    const isHidden=content.classList.contains('hidden') || getComputedStyle(content).display==='none';
+    if(isHidden){
+      content.classList.remove('hidden');
+      content.style.display='block';
+      if(arrow)arrow.textContent='▲';
+    }else{
+      content.classList.add('hidden');
+      content.style.display='none';
+      if(arrow)arrow.textContent='▼';
+    }
+  };
+}
+
+/* ---------- Re-apply after equipment screen render ---------- */
+if(typeof renderEquip==='function'){
+  const renderEquipBaseV5715=renderEquip;
+  renderEquip=function(){
+    const r=renderEquipBaseV5715.apply(this,arguments);
+    setTimeout(()=>{
+      renderOwnedEquipmentV5715();
+      bindSkillToggleV5715();
+      renderGrandpaStatusClean();
+    },0);
+    return r;
+  };
+}
+
+setTimeout(()=>{
+  renderOwnedEquipmentV5715();
+  bindSkillToggleV5715();
+  const active=document.querySelector('.panel.active');
+  if(active && active.id==='equip')renderGrandpaStatusClean();
+},0);

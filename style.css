@@ -672,3 +672,34 @@
   opacity:.72;
   text-align:left;
 }
+
+/* ===== v5.7.15 owned equipment list ===== */
+.inventory-row-v5715{
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:12px;
+  padding:14px 16px;
+  box-sizing:border-box;
+  border-radius:14px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.06);
+}
+.inventory-main-v5715{min-width:0}
+.inventory-slot-v5715{font-size:12px;opacity:.6;margin-bottom:3px}
+.inventory-name-v5715{font-size:18px;font-weight:800;line-height:1.25}
+.inventory-stats-v5715{font-size:13px;opacity:.72;margin-top:5px}
+.inventory-equip-btn-v5715{
+  min-width:86px;
+  width:auto;
+  margin:0;
+}
+.inventory-equip-btn-v5715.equipped{
+  background:#2167b3;
+}
+.inventory-empty-v5715{
+  padding:18px;
+  text-align:center;
+  opacity:.65;
+}
