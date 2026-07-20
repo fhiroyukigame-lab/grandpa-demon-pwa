@@ -119,3 +119,6 @@
 #battleIntroV563.hit .sword-center-clean{animation:swordCenterClean .20s ease-out forwards}
 @keyframes swordCenterClean{0%{opacity:0;transform:scale(.7)}35%{opacity:1;transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
 .battle-grandpa-face-clean{font-size:72px;line-height:1;display:inline-block}
+
+/* ===== BUILD 5.7.0 ===== */
+.owned-skills-card-v570{padding:0;overflow:hidden}.owned-skills-toggle-v570{width:100%;min-height:54px;padding:0 18px;display:flex;justify-content:space-between;align-items:center;font-weight:800;border-radius:inherit}.owned-skills-content-v570{padding:14px 18px;border-top:1px solid rgba(255,255,255,.08)}.owned-skills-content-v570.hidden{display:none}.owned-skill-row-v570{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)}.owned-skill-row-v570:last-child{border-bottom:0}.owned-skill-row-v570 div{font-size:14px;opacity:.72;margin-top:4px}.options-card-v570{padding:22px}.option-row-v570{display:grid;grid-template-columns:90px 1fr 42px;gap:12px;align-items:center;margin:20px 0}.option-row-v570 input{width:100%}.grandpa-status-actions-clean{grid-template-columns:1fr 1fr}.detail-section{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08)}.detail-section.total{border-bottom:0}

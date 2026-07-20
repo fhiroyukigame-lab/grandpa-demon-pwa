@@ -29,12 +29,15 @@ const GRANDPA_NAMES=['ゲンゾウ','テツジ','シゲル','カンゾウ','リ�
 function cloneDefaultState(){return JSON.parse(JSON.stringify(DEFAULT_STATE));}
 let state=migrate(load());state.gears.forEach(g=>{if(!g.name){g.name='オールド'+g.suffix;g.locked=true;g.effects=g.effects||[]}if(/^名もなき/.test(g.name)){const a=ADJECTIVES[Math.floor(Math.random()*ADJECTIVES.length)],n=ABSTRACT_NOUNS[Math.floor(Math.random()*ABSTRACT_NOUNS.length)];g.name=a[0]+n[0]+'の'+g.suffix;g.locked=true;g.effects=[a[2],n[2]];g.bonus=g.bonus||{};addBonus(g.bonus,a[1]);addBonus(g.bonus,n[1])}});let pendingGearId=null;let battle=null,battleTimer=null,cooldowns=[0,0,0];
 const $=s=>document.querySelector(s);const titleBgm=$('#titleBgm'),menuBgm=$('#menuBgm'),battleBgm=$('#battleBgm'),forgeBgm=$('#forgeBgm'),hitSe=$('#hitSe'),buttonSe=$('#buttonSe'),equipButtonSe=$('#equipButtonSe'),slotButtonSe=$('#slotButtonSe'),rouletteSe=$('#rouletteSe'),slotResultSe=$('#slotResultSe'),clashSe=$('#clashSe'),castleButtonSe=$('#castleButtonSe');
+const AUDIO_SETTINGS_KEY_V570='grandpaDemonAudioSettings';
+let audioSettingsV570={bgm:0.70,se:0.80};
+try{const a=JSON.parse(localStorage.getItem(AUDIO_SETTINGS_KEY_V570)||'null');if(a){if(typeof a.bgm==='number')audioSettingsV570.bgm=Math.max(0,Math.min(1,a.bgm));if(typeof a.se==='number')audioSettingsV570.se=Math.max(0,Math.min(1,a.se));}}catch(e){}
 window.addEventListener('error',e=>console.error('APP ERROR:',e.error||e.message));
 function uid(){return 'g'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function starter(slot,suffix,base,name){return {id:uid(),slot,suffix,base:{...base},bonus:{},level:0,name,locked:true}}
 function migrate(old){if(old&&old.version===3&&Array.isArray(old.gears))return {...DEFAULT_STATE,...old,playerName:old.playerName||'ゲンゾウ',equipped:{...DEFAULT_STATE.equipped,...old.equipped},skills:old.skills||{},equippedSkills:old.equippedSkills||[]};const s=cloneDefaultState();if(old){s.gold=old.gold??300;s.playerName=old.playerName||'ゲンゾウ';s.maxFloor=old.maxFloor??0;s.selectedFloor=old.selectedFloor??1;}const starters=[starter('right','ソード',{atk:8},'オールドソード'),starter('left','シールド',{def:5},'オールドシールド'),starter('body','チュニック',{hp:35},'オールドチュニック'),starter('head','フード',{hp:20},'オールドフード')];s.gears=starters;for(const g of starters)s.equipped[g.slot]=g.id;return s}
 function save(){localStorage.setItem('grandpaDemonSave',JSON.stringify(state))}function load(){try{return JSON.parse(localStorage.getItem('grandpaDemonSave'))}catch{return null}}
-function playAudio(a,rate=1){if(!a)return;try{a.pause();a.currentTime=0;a.playbackRate=rate;a.play().catch(()=>{})}catch{}}function playSE(){playAudio(buttonSe,1.12)}function playEquipSE(){playAudio(equipButtonSe)}
+function playAudio(a,rate=1){if(!a)return;try{a.pause();a.currentTime=0;a.playbackRate=rate;a.volume=audioSettingsV570.se;a.play().catch(()=>{})}catch{}}function playSE(){playAudio(buttonSe,1.12)}function playEquipSE(){playAudio(equipButtonSe)}
 function gear(id){return state.gears.find(g=>g.id===id)}
 function addBonus(dst,src){Object.entries(src||{}).forEach(([k,v])=>dst[k]=(dst[k]||0)+v)}
 function statSummary(g){const all={...g.base};Object.entries(g.bonus||{}).forEach(([k,v])=>all[k]=(all[k]||0)+v);return [['HP','hp'],['攻','atk'],['防','def'],['速','spd'],['会心','crit'],['回避','eva']].filter(x=>all[x[1]]).map(x=>x[0]+(all[x[1]]>0?'+':'')+all[x[1]]).join(' / ')||'能力なし'}
@@ -49,8 +52,7 @@ function openName(id){pendingGearId=id;const g=gear(id);$('#nameBaseInfo').textC
 function spinText(el,items,duration,done){let start=performance.now();const timer=setInterval(()=>{el.textContent=items[Math.floor(Math.random()*items.length)][0]},65);setTimeout(()=>{clearInterval(timer);done()},duration)}
 let gearSlotBusy=false;
 function gearGacha(){if(gearSlotBusy)return;if(state.gold<100)return alert('ゴールドが足りません');gearSlotBusy=true;state.gold-=100;save();$('#gold').textContent=state.gold;$('#gearGacha').disabled=true;$('#gachaResult').innerHTML='';$('#rouletteStatus').classList.add('active');$('#rouletteStatus').textContent='貴方に合った装備を探しています...';playAudio(slotButtonSe);setTimeout(()=>playAudio(rouletteSe),20);const adj=ADJECTIVES[Math.floor(Math.random()*ADJECTIVES.length)],noun=ABSTRACT_NOUNS[Math.floor(Math.random()*ABSTRACT_NOUNS.length)],type=GEAR_TYPES[Math.floor(Math.random()*GEAR_TYPES.length)];const ra=$('#reelAdj'),rn=$('#reelNoun'),rt=$('#reelType');spinText(ra,ADJECTIVES,650,()=>{ra.textContent=adj[0];spinText(rn,ABSTRACT_NOUNS,650,()=>{rn.textContent=noun[0];spinText(rt,GEAR_TYPES.map(x=>[x.suffix]),650,()=>{rt.textContent=type.suffix;setTimeout(()=>{const variance={};Object.entries(type.base).forEach(([k,v])=>variance[k]=Math.round(v*(.85+Math.random()*.3)));const bonus={};addBonus(bonus,adj[1]);addBonus(bonus,noun[1]);const name=adj[0]+noun[0]+'の'+type.suffix;const g={id:uid(),slot:type.slot,suffix:type.suffix,base:variance,bonus,level:0,name,locked:true,effects:[adj[2],noun[2]]};state.gears.push(g);$('#rouletteStatus').classList.remove('active');$('#rouletteStatus').textContent='';$('#gachaResult').innerHTML=`<div class="slot-result-pop">✨ <b>${name}</b>を獲得！<br><span class="item-meta">${SLOT_LABEL[g.slot]}｜${statSummary(g)}</span><div class="effect-line"><span class="effect-tag">${adj[2]}</span><span class="effect-tag">${noun[2]}</span></div></div>`;playAudio(slotResultSe);gearSlotBusy=false;$('#gearGacha').disabled=false;render()},120)})})})}
-function skillGacha(){if(state.gold<150)return alert('ゴールドが足りません');state.gold-=150;const sk=SKILLS[Math.floor(Math.random()*SKILLS.length)];state.skills[sk.name]=(state.skills[sk.name]||0)+1;if(!state.equippedSkills.includes(sk.name)&&state.equippedSkills.length<3)state.equippedSkills.push(sk.name);$('#gachaResult').innerHTML=`💫 スキル <b>${sk.name}</b> Lv.${state.skills[sk.name]} を獲得！`;render()}
-function renderSkills(){const root=$('#skillList');root.innerHTML='';const names=Object.keys(state.skills);if(!names.length){root.innerHTML='<p class="item-meta">まだスキルを持っていません。</p>';return}names.forEach(name=>{const sk=SKILLS.find(x=>x.name===name),on=state.equippedSkills.includes(name);const d=document.createElement('div');d.className='skill-card';d.innerHTML=`<div><b>${name} Lv.${state.skills[name]}</b><div class="item-meta">${sk.desc}</div></div><button>${on?'装備中':'装備'}</button>`;d.querySelector('button').onclick=()=>{if(on)state.equippedSkills=state.equippedSkills.filter(x=>x!==name);else{if(state.equippedSkills.length>=3)return alert('スキルは3つまでです');state.equippedSkills.push(name)}render()};root.appendChild(d)})}
+function skillGacha(){if(state.gold<150)return alert('ゴールドが足りません');state.gold-=150;const sk=SKILLS[Math.floor(Math.random()*SKILLS.length)];state.skills[sk.name]=(state.skills[sk.name]||0)+1;renderSkillLearnResultClean(sk.name,state.skills[sk.name]);render()}function renderSkills(){const root=$('#skillList');root.innerHTML='';const names=Object.keys(state.skills);if(!names.length){root.innerHTML='<p class="item-meta">まだスキルを持っていません。</p>';return}names.forEach(name=>{const sk=SKILLS.find(x=>x.name===name),on=state.equippedSkills.includes(name);const d=document.createElement('div');d.className='skill-card';d.innerHTML=`<div><b>${name} Lv.${state.skills[name]}</b><div class="item-meta">${sk.desc}</div></div><button>${on?'装備中':'装備'}</button>`;d.querySelector('button').onclick=()=>{if(on)state.equippedSkills=state.equippedSkills.filter(x=>x!==name);else{if(state.equippedSkills.length>=3)return alert('スキルは3つまでです');state.equippedSkills.push(name)}render()};root.appendChild(d)})}
 function enemyForFloor(f){if(f===30)return{name:'大魔王ヴァルガス',avatar:'😈',hp:1900,atk:82,def:30,spd:48,reward:2200,boss:true,demon:true};if(f===20)return{name:'冥界竜ネクロス',avatar:'🐲',hp:1100,atk:60,def:23,spd:44,reward:1000,boss:true};if(f===10)return{name:'獄炎将軍ガルド',avatar:'👹',hp:560,atk:40,def:16,spd:42,reward:500,boss:true};const b=ENEMIES[Math.min(ENEMIES.length-1,Math.floor((f-1)/5))],m=1+(f-1)*.13;return{...b,hp:Math.round(b.hp*m),atk:Math.round(b.atk*(1+(f-1)*.09)),def:Math.round(b.def*(1+(f-1)*.07)),reward:Math.round(b.reward*m)}}
 function beginBattleNow(){playBgm(battleBgm);clearInterval(battleTimer);const ps=stats(),en=enemyForFloor(state.selectedFloor);battle={floor:state.selectedFloor,p:{...ps,maxHp:ps.hp,currentHp:ps.hp,next:0,boostUntil:0,guard:false,parry:false,counter:false,critBoost:false},e:{...en,maxHp:en.hp,currentHp:en.hp,next:0},tick:0};cooldowns=[0,0,0];$('#battleArea').classList.remove('hidden');$('#enemyName').textContent=en.name;const enemyEl=$('#enemyAvatar'),playerEl=$('#playerAvatar');enemyEl.textContent=en.avatar;enemyEl.className='avatar'+(en.boss?' boss-aura':'')+(en.demon?' demon-aura':'');renderGrandpa(playerEl);playerEl.classList.remove('battle-enter-left','enemy-defeated');enemyEl.classList.remove('battle-enter-right','enemy-defeated');void playerEl.offsetWidth;void enemyEl.offsetWidth;playerEl.classList.add('battle-enter-left');enemyEl.classList.add('battle-enter-right');setTimeout(()=>{playerEl.classList.remove('battle-enter-left');enemyEl.classList.remove('battle-enter-right')},820);$('#battleLog').innerHTML='';log(`第${battle.floor}階、${en.name}が現れた！`);updateBattleUI();battleTimer=setInterval(stepBattle,100)}
 
@@ -81,7 +83,7 @@ function useSkill(i){if(!battle||cooldowns[i]>0)return;const name=state.equipped
 function updateBattleUI(){if(!battle)return;const p=battle.p,e=battle.e;$('#playerHpBar').style.width=Math.max(0,p.currentHp/p.maxHp*100)+'%';$('#enemyHpBar').style.width=Math.max(0,e.currentHp/e.maxHp*100)+'%';$('#playerHpText').textContent=`${Math.max(0,Math.round(p.currentHp))} / ${p.maxHp}`;$('#enemyHpText').textContent=`${Math.max(0,Math.round(e.currentHp))} / ${e.maxHp}`}
 function win(){if(!battle)return;const f=battle.floor,r=battle.e.reward;clearInterval(battleTimer);battleTimer=null;battle.e.currentHp=0;updateBattleUI();$('#enemyAvatar').classList.add('enemy-defeated');state.gold+=r;state.maxFloor=Math.max(state.maxFloor,f);if(f<30)state.selectedFloor=Math.min(30,f+1);log(`勝利！ ${r}Gを獲得！`);floatText($('#battleArea'),`💰 +${r} G`,'gold-float');save();$('#gold').textContent=state.gold;$('#maxFloor').textContent=state.maxFloor;$('#selectedFloor').textContent=state.selectedFloor;setTimeout(()=>{battle=null;render()},750)}function lose(){clearInterval(battleTimer);battleTimer=null;log('じいさんは力尽きた……。');battle=null;updateBattleUI()}function log(t){$('#battleLog').insertAdjacentHTML('beforeend',`<p>${t}</p>`);$('#battleLog').scrollTop=$('#battleLog').scrollHeight}
 function stopBgms(){[titleBgm,menuBgm,battleBgm,forgeBgm].forEach(a=>{try{a.pause()}catch{}})}
-function playBgm(a){stopBgms();if(a){a.currentTime=0;a.play().catch(()=>{})}}
+function playBgm(a){stopBgms();if(a){a.currentTime=0;a.volume=audioSettingsV570.bgm;a.play().catch(()=>{})}}
 function setHeroForge(on){const hero=$('.hero');if(on){hero.classList.add('forge-hero');hero.innerHTML='<div class="smith-face">🧔‍♂️</div><div class="smith-speech">いらっしゃい</div>'}else if(hero.classList.contains('forge-hero')){hero.classList.remove('forge-hero');hero.innerHTML='<div id="shopGrandpa" class="portrait layered-grandpa"></div><div class="hero-info"><h2>武器屋のじいさん Lv.<span id="level">1</span></h2><div class="statline"><span>HP</span><b id="hpStat"></b></div><div class="statline"><span>攻撃</span><b id="atkStat"></b></div><div class="statline"><span>防御</span><b id="defStat"></b></div><div class="statline"><span>速度</span><b id="spdStat"></b></div><div class="statline"><span>会心</span><b id="critStat"></b></div><div class="statline"><span>回避</span><b id="evaStat"></b></div></div>';render()}}
 
 const heroElV54=document.querySelector('.hero');const tabsElV54=document.querySelector('.tabs');
@@ -91,9 +93,8 @@ function enterGame(){playBgm(menuBgm);$('#titleScreen').classList.add('hidden');
 let titleAudioUnlocked=true;
 $('#newGameBtn').onclick=()=>{playSE();if(localStorage.getItem('grandpaDemonSave')&&!confirm('現在のセーブデータを消してニューゲームを始めますか？'))return;localStorage.removeItem('grandpaDemonSave');state=migrate(null);save();setTimeout(enterGame,180)};$('#continueBtn').onclick=()=>{playSE();state=migrate(load());setTimeout(enterGame,180)};
 $('#gearGacha').onclick=gearGacha;$('#skillGacha').onclick=skillGacha;
-document.addEventListener('pointerdown',e=>{const btn=e.target.closest&&e.target.closest('button');if(btn&&!btn.disabled)playSE()},{passive:true});
+document.addEventListener('pointerdown',e=>{const btn=e.target.closest&&e.target.closest('button');if(!btn||btn.disabled)return;if(btn.matches('.tab[data-tab=\"battle\"]')){playAudio(castleButtonSe,1);return;}if(btn.matches('[data-equip]')||btn.id==='gearGacha')return;playSE()},{passive:true});
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab,b));$('#minusFloor').onclick=()=>{state.selectedFloor=Math.max(1,state.selectedFloor-1);render()};$('#plusFloor').onclick=()=>{state.selectedFloor=Math.min(30,Math.max(state.maxFloor+1,1),state.selectedFloor+1);render()};$('#startBattle').onclick=startBattle;const skillPowerBtn=$('#skillPower'),skillDodgeBtn=$('#skillDodge'),skillThrowBtn=$('#skillThrow');if(skillPowerBtn)skillPowerBtn.onclick=()=>useSkill(0);if(skillDodgeBtn)skillDodgeBtn.onclick=()=>useSkill(1);if(skillThrowBtn)skillThrowBtn.onclick=()=>useSkill(2);$('#resetSave').onclick=()=>{if(confirm('本当にセーブデータを初期化しますか？')){localStorage.removeItem('grandpaDemonSave');location.reload()}};
-document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.matches('[data-equip]')||b.id==='gearGacha')return;playSE()});
 if('serviceWorker'in navigator){let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;location.reload()});window.addEventListener('load',async()=>{try{const r=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});if(r.waiting)r.waiting.postMessage({type:'SKIP_WAITING'});r.addEventListener('updatefound',()=>{const w=r.installing;if(w)w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)w.postMessage({type:'SKIP_WAITING'})})})}catch(e){console.warn(e)}})}
 showTitle();
 
@@ -112,94 +113,28 @@ function currentStatsClean(){
 
 /* ---------- Grandpa status: Equipment screen only ---------- */
 function renderGrandpaStatusClean(){
-  const hero=document.querySelector('.hero');
-  if(!hero)return;
-  hero.style.display='';
-  hero.className='hero card grandpa-status-card-clean';
-  hero.innerHTML=`
-    <div class="grandpa-status-main-clean">
-      <div class="grandpa-face-clean">👴</div>
-      <div class="grandpa-status-body-clean">
-        <div class="grandpa-name-clean" id="playerNameDisplay">${state.playerName||'じいさん'}</div>
-        <div class="grandpa-stats-clean">
-          <div><span>HP</span><b id="hpStat"></b></div>
-          <div><span>攻撃</span><b id="atkStat"></b></div>
-          <div><span>防御</span><b id="defStat"></b></div>
-          <div><span>速度</span><b id="spdStat"></b></div>
-          <div><span>会心</span><b id="critStat"></b></div>
-          <div><span>回避</span><b id="evaStat"></b></div>
-          <div><span>HP吸収</span><b id="lifestealStat"></b></div>
-        </div>
-      </div>
-    </div>
-    <div class="grandpa-status-actions-clean">
-      <button id="statusDetailBtn">ステータス詳細</button>
-      <button id="statusHelpBtn">ヘルプ</button>
-      <button id="learnedSkillsBtn">スキル</button>
-    </div>`;
-  const s=currentStatsClean();
-  safeText('#hpStat',s.hp);
-  safeText('#atkStat',s.atk);
-  safeText('#defStat',s.def);
-  safeText('#spdStat',s.spd);
-  safeText('#critStat',s.crit+'%');
-  safeText('#evaStat',s.eva+'%');
-  safeText('#lifestealStat',Math.round((s.lifesteal||0)*100)+'%');
-  if(typeof bindHeroButtonsV52==='function')bindHeroButtonsV52();
+  const hero=document.querySelector('.hero');if(!hero)return;
+  hero.style.display='';hero.className='hero card grandpa-status-card-clean';
+  hero.innerHTML=`<div class="grandpa-status-main-clean"><div class="grandpa-face-clean">👴</div><div class="grandpa-status-body-clean"><div class="grandpa-name-clean" id="playerNameDisplay">${state.playerName||'じいさん'}</div><div class="grandpa-stats-clean"><div><span>HP</span><b id="hpStat"></b></div><div><span>攻撃</span><b id="atkStat"></b></div><div><span>防御</span><b id="defStat"></b></div><div><span>速度</span><b id="spdStat"></b></div><div><span>会心</span><b id="critStat"></b></div><div><span>回避</span><b id="evaStat"></b></div><div><span>HP吸収</span><b id="lifestealStat"></b></div></div></div></div><div class="grandpa-status-actions-clean"><button id="statusDetailBtn">ステータス詳細</button><button id="statusHelpBtn">ヘルプ</button></div>`;
+  const s=currentStatsClean();safeText('#hpStat',s.hp);safeText('#atkStat',s.atk);safeText('#defStat',s.def);safeText('#spdStat',s.spd);safeText('#critStat',s.crit+'%');safeText('#evaStat',s.eva+'%');safeText('#lifestealStat',Math.round((s.lifesteal||0)*100)+'%');bindStatusButtonsV570();
 }
+function statObjectTextV570(o){const names={hp:'HP',atk:'攻撃',def:'防御',spd:'速度',crit:'会心',eva:'回避',lifesteal:'HP吸収'};return Object.keys(names).filter(k=>o&&o[k]).map(k=>`${names[k]} ${k==='lifesteal'?Math.round(o[k]*100)+'%':o[k]}`).join(' / ')||'補正なし';}
+function showStatusDetailV570(){const box=$('#detailContent'),title=$('#detailTitle');if(!box)return;if(title)title.textContent='ステータス詳細';const base={hp:128,atk:12,def:5,spd:50,crit:5,eva:3,lifesteal:0};const rows=[`<div class="detail-section"><b>じいさん基礎値</b><p>${statObjectTextV570(base)}</p></div>`];Object.entries(state.equipped).forEach(([slot,id])=>{const g=gear(id);if(!g)return;rows.push(`<div class="detail-section"><b>${SLOT_LABEL[slot]}：${g.name}</b><p>基礎効果：${statObjectTextV570(g.base||{})}</p><p>強化・その他：${statObjectTextV570(g.bonus||{})}</p></div>`)});const total=stats();rows.push(`<div class="detail-section total"><b>合計ステータス</b><p>${statObjectTextV570(total)}</p></div>`);box.innerHTML=rows.join('');$('#detailModal').classList.remove('hidden');}
+function bindStatusButtonsV570(){const d=$('#statusDetailBtn'),h=$('#statusHelpBtn');if(d)d.onclick=showStatusDetailV570;if(h)h.onclick=()=>$('#helpModal').classList.remove('hidden');}
 
 /* ---------- Screen switching: one implementation only ---------- */
 function switchTab(tab,btn){
-  const apply=()=>{
-    document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));
-    if(btn)btn.classList.add('active');
-    const panel=document.querySelector('#'+tab);
-    if(panel)panel.classList.add('active');
-
-    const hero=document.querySelector('.hero');
-    if(hero){
-      if(tab==='equip')renderGrandpaStatusClean();
-      else hero.style.display='none';
-    }
-
-    if(tab==='equip'){
-      playBgm(menuBgm);
-      renderEquip();
-      renderGrandpaStatusClean();
-    }else if(tab==='gacha'){
-      playBgm(titleBgm);
-      renderSkillsClean();
-    }else if(tab==='forge'){
-      playBgm(forgeBgm);
-      renderForge();
-    }else if(tab==='battle'){
-      playBgm(battleBgm);
-      safeText('#maxFloor',state.maxFloor);
-      safeText('#selectedFloor',state.selectedFloor);
-    }
-    save();
-  };
-
-  const label={gacha:'ショップ',forge:'鍛冶屋',battle:'魔王城'}[tab];
-  if(label && typeof transitionToV52==='function'){
-    transitionToV52(label,apply);
-  }else{
-    apply();
-  }
+  const apply=()=>{document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));if(btn)btn.classList.add('active');const panel=document.querySelector('#'+tab);if(panel)panel.classList.add('active');const hero=document.querySelector('.hero');if(hero){if(tab==='equip')renderGrandpaStatusClean();else hero.style.display='none';}
+  if(tab==='equip'){playBgm(menuBgm);renderEquip();renderGrandpaStatusClean();renderOwnedSkillsV570();}
+  else if(tab==='gacha'){playBgm(titleBgm);renderSkillsClean();}
+  else if(tab==='forge'){playBgm(forgeBgm);renderForge();}
+  else if(tab==='battle'){playBgm(battleBgm);safeText('#maxFloor',state.maxFloor);safeText('#selectedFloor',state.selectedFloor);}
+  else if(tab==='options'){playBgm(menuBgm);bindAudioOptionsV570();applyAudioVolumesV570();}save();};
+  const label={gacha:'ショップ',forge:'鍛冶屋',battle:'魔王城'}[tab];if(label&&typeof transitionToV52==='function')transitionToV52(label,apply);else apply();
 }
 
 /* ---------- Tabs: dedicated Demon Castle SE ---------- */
-function bindTabsClean(){
-  document.querySelectorAll('.tab').forEach(b=>{
-    b.onclick=(ev)=>{
-      if(b.dataset.tab==='battle' && typeof playCastleButtonSEV563==='function'){
-        try{ev.stopPropagation()}catch(e){}
-        playCastleButtonSEV563();
-      }
-      switchTab(b.dataset.tab,b);
-    };
-  });
-}
+function bindTabsClean(){document.querySelectorAll('.tab').forEach(b=>{b.onclick=()=>switchTab(b.dataset.tab,b);});}
 
 /* ---------- Skill shop: clean result-only UI ---------- */
 function getSkillDefClean(name){
@@ -304,10 +239,7 @@ function playBattleIntroV563(done){
 }
 
 /* Battle avatar: face only. */
-function renderBattleGrandpaFaceOnlyClean(){
-  const el=document.querySelector('#playerAvatar');
-  if(el)el.innerHTML='<span class="battle-grandpa-face-clean">👴</span>';
-}
+const GRANDPA_FACE_POOL_V570=['👴','🧓','👨‍🦳','👨‍🦲'];function grandpaFaceV570(){if(typeof state.grandpaFaceIndex!=='number'){state.grandpaFaceIndex=Math.floor(Math.random()*GRANDPA_FACE_POOL_V570.length);save()}return GRANDPA_FACE_POOL_V570[state.grandpaFaceIndex%GRANDPA_FACE_POOL_V570.length]}function renderBattleGrandpaFaceOnlyClean(){const el=document.querySelector('#playerAvatar');if(el)el.innerHTML=`<span class="battle-grandpa-face-clean">${grandpaFaceV570()}</span>`;}
 if(typeof renderBattle==='function'){
   const _renderBattleBaseClean=renderBattle;
   renderBattle=function(){
@@ -317,10 +249,16 @@ if(typeof renderBattle==='function'){
   };
 }
 
+/* ---------- Owned skills collapsible ---------- */
+function renderOwnedSkillsV570(){const c=$('#ownedSkillsContentV570');if(!c)return;const names=Object.keys(state.skills||{});c.innerHTML=names.length?names.map(n=>{const sk=getSkillDefClean(n);return `<div class="owned-skill-row-v570"><b>${n}${state.skills[n]>1?` Lv.${state.skills[n]}`:''}</b><div>${sk&&(sk.desc||sk.effect)?(sk.desc||sk.effect):'パッシブスキル'}</div></div>`}).join(''):'まだスキルを習得していません。';const t=$('#ownedSkillsToggleV570');if(t&&!t.dataset.bound){t.dataset.bound='1';t.onclick=()=>{const open=c.classList.contains('hidden');c.classList.toggle('hidden',!open);safeText('#ownedSkillsArrowV570',open?'▲':'▼')}}}
+/* ---------- Audio options ---------- */
+function applyAudioVolumesV570(){[titleBgm,menuBgm,battleBgm,forgeBgm].forEach(a=>{if(a)a.volume=audioSettingsV570.bgm});[hitSe,buttonSe,equipButtonSe,slotButtonSe,rouletteSe,slotResultSe,clashSe,castleButtonSe].forEach(a=>{if(a)a.volume=audioSettingsV570.se});const b=$('#bgmVolumeV570'),s=$('#seVolumeV570');if(b)b.value=Math.round(audioSettingsV570.bgm*100);if(s)s.value=Math.round(audioSettingsV570.se*100);safeText('#bgmVolumeValueV570',Math.round(audioSettingsV570.bgm*100));safeText('#seVolumeValueV570',Math.round(audioSettingsV570.se*100));}
+function bindAudioOptionsV570(){const b=$('#bgmVolumeV570'),s=$('#seVolumeV570');if(b&&!b.dataset.bound){b.dataset.bound='1';b.oninput=()=>{audioSettingsV570.bgm=+b.value/100;localStorage.setItem(AUDIO_SETTINGS_KEY_V570,JSON.stringify(audioSettingsV570));applyAudioVolumesV570()}}if(s&&!s.dataset.bound){s.dataset.bound='1';s.oninput=()=>{audioSettingsV570.se=+s.value/100;localStorage.setItem(AUDIO_SETTINGS_KEY_V570,JSON.stringify(audioSettingsV570));applyAudioVolumesV570()}}}
+
 /* ---------- Startup ---------- */
 function initCleanBuild(){
   bindTabsClean();
-  bindSkillPurchaseClean();
+  bindSkillPurchaseClean();applyAudioVolumesV570();bindAudioOptionsV570();
 
   const active=document.querySelector('.panel.active');
   const id=active?active.id:'equip';
@@ -328,7 +266,7 @@ function initCleanBuild(){
 
   if(id==='equip'){
     renderGrandpaStatusClean();
-    renderEquip();
+    renderEquip();renderOwnedSkillsV570();bindStatusButtonsV570();
   }else if(id==='gacha'){
     const hero=document.querySelector('.hero');if(hero)hero.style.display='none';
     renderSkillsClean();
@@ -339,3 +277,5 @@ function initCleanBuild(){
   }
 }
 setTimeout(initCleanBuild,0);
+
+['detailClose','helpClose','skillsClose'].forEach(id=>{const b=$('#'+id);if(b)b.onclick=()=>b.closest('.modal').classList.add('hidden')});
