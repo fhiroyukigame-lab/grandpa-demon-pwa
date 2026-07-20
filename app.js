@@ -10632,14 +10632,33 @@ function seededValueClean(seed,salt,min,max){let x=(seed^Math.imul(salt,26544357
 function availableSkillNamesClean(){if(typeof SKILLS==='undefined')return[];if(Array.isArray(SKILLS))return SKILLS.map(x=>x&&x.name).filter(Boolean);return Object.keys(SKILLS);}
 function qrCharacterFromTextClean(text){const seed=hashStringClean(text),names=(typeof GRANDPA_NAMES!=='undefined'&&GRANDPA_NAMES.length?GRANDPA_NAMES:['ゲンゾウ','トラキチ','タツノスケ','ゴンゾウ']),skills=availableSkillNamesClean();return{qrHash:String(seed),playerName:names[seed%names.length],faceIndex:seededValueClean(seed,23,0,49),grandpaFaceIndex:seededValueClean(seed,29,0,3),baseStats:{hp:seededValueClean(seed,31,90,115),atk:seededValueClean(seed,37,8,13),def:seededValueClean(seed,41,4,8),spd:seededValueClean(seed,43,45,55),crit:seededValueClean(seed,47,2,7),eva:seededValueClean(seed,53,1,5)},initialSkill:skills.length?skills[seededValueClean(seed,17,0,skills.length-1)]:null};}
 
+
 function showQrCharacterResultClean(char){
   const box=document.querySelector('#qrResultBox');
   if(!box)return;
   pendingQrCharacterClean=char;
-  const skill=char.initialSkill||'なし';
-  const face=(typeof GRANDPA_FACES_CLEAN!=='undefined')
-    ? GRANDPA_FACES_CLEAN[char.grandpaFaceIndex%GRANDPA_FACES_CLEAN.length]
-    : '👴';
+
+  const skillName=char.initialSkill||'なし';
+  let skillDesc='スキルなし';
+  try{
+    if(skillName!=='なし' && typeof SKILLS!=='undefined'){
+      let def=null;
+      if(Array.isArray(SKILLS)){
+        def=SKILLS.find(x=>x&&(x.name===skillName||x.id===skillName));
+      }else{
+        def=SKILLS[skillName]||null;
+      }
+      if(def)skillDesc=def.desc||def.effect||'パッシブスキル';
+      else skillDesc='パッシブスキル';
+    }
+  }catch(e){}
+
+  let face='👴';
+  try{
+    if(typeof GRANDPA_FACES_CLEAN!=='undefined' && GRANDPA_FACES_CLEAN.length){
+      face=GRANDPA_FACES_CLEAN[char.grandpaFaceIndex % GRANDPA_FACES_CLEAN.length];
+    }
+  }catch(e){}
 
   box.classList.remove('hidden');
   box.innerHTML=`
@@ -10656,15 +10675,19 @@ function showQrCharacterResultClean(char){
         <div class="qr-stat-line-v579"><span>会心</span><b>${char.baseStats.crit}%</b></div>
         <div class="qr-stat-line-v579"><span>回避</span><b>${char.baseStats.eva}%</b></div>
       </div>
-      <div class="qr-skill-v579">
-        <span>初期スキル</span>
-        <b>${skill}</b>
+      <div class="qr-skill-v579 qr-skill-detail-v5714">
+        <div class="qr-skill-head-v5714">
+          <span>初期スキル</span>
+          <b>${skillName}</b>
+        </div>
+        <div class="qr-skill-desc-v5714">${skillDesc}</div>
       </div>
       <button id="startQrGameBtn" class="title-btn qr-start-btn-v579">このじいさんでニューゲーム</button>
     </div>`;
   const btn=document.querySelector('#startQrGameBtn');
   if(btn)btn.onclick=startQrNewGameClean;
 }
+
 
 function applyQrCharacterToStateClean(c){state=migrate(null);state.playerName=c.playerName;state.grandpaFaceIndex=c.grandpaFaceIndex;state.faceId=c.faceIndex;state.qrHash=c.qrHash;state.qrBaseStats=c.baseStats;state.skills={};if(c.initialSkill)state.skills[c.initialSkill]=1;}
 function startQrNewGameClean(){
@@ -10816,3 +10839,98 @@ setTimeout(()=>{
 (function(){const t=document.querySelector('#titleScreen'),a=document.querySelector('#titleBgm');if(!t||!a)return;
 const f=()=>{if(!t.classList.contains('hidden')&&a.paused){try{const p=a.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}}};
 t.addEventListener('pointerdown',f,{passive:true});t.addEventListener('touchstart',f,{passive:true});})();
+
+
+/* ===== v5.7.14 normalize equipment list layout ===== */
+function normalizeEquipmentListV5714(){
+  const root =
+    document.querySelector('#inventory') ||
+    document.querySelector('.inventory-list') ||
+    document.querySelector('#ownedEquipment') ||
+    document.querySelector('.owned-equipment-list');
+  if(!root)return;
+
+  root.style.display='flex';
+  root.style.flexDirection='column';
+  root.style.gap='10px';
+
+  Array.from(root.children).forEach(row=>{
+    if(!(row instanceof HTMLElement))return;
+    row.style.width='100%';
+    row.style.display='grid';
+    row.style.gridTemplateColumns='minmax(0, 1fr) auto';
+    row.style.alignItems='center';
+    row.style.gap='12px';
+
+    const btn=row.querySelector('button');
+    if(btn){
+      btn.style.justifySelf='end';
+      btn.style.minWidth='86px';
+      btn.style.width='auto';
+      btn.style.margin='0';
+    }
+  });
+}
+if(typeof renderEquip==='function'){
+  const renderEquipBaseV5714=renderEquip;
+  renderEquip=function(){
+    const r=renderEquipBaseV5714.apply(this,arguments);
+    setTimeout(normalizeEquipmentListV5714,0);
+    return r;
+  };
+}
+setTimeout(normalizeEquipmentListV5714,0);
+
+
+/* ===== v5.7.14 title BGM startup ===== */
+(function startTitleBgmImmediatelyV5714(){
+  const a=document.querySelector('#titleBgm');
+  const title=document.querySelector('#titleScreen');
+  if(!a||!title)return;
+
+  const start=()=>{
+    if(title.classList.contains('hidden'))return;
+    try{
+      if(typeof audioSettingsClean!=='undefined')a.volume=audioSettingsClean.bgm;
+      else a.volume=0.7;
+      const p=a.play();
+      if(p&&p.catch)p.catch(()=>{});
+    }catch(e){}
+  };
+
+  // Try immediately.
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',start,{once:true});
+  }else{
+    start();
+  }
+
+  // iPhone/Safari fallback: first interaction unlocks audio.
+  const unlock=()=>{
+    start();
+    window.removeEventListener('pointerdown',unlock,true);
+    window.removeEventListener('touchstart',unlock,true);
+  };
+  window.addEventListener('pointerdown',unlock,true);
+  window.addEventListener('touchstart',unlock,true);
+})();
+
+
+/* ===== v5.7.14 QR/status face consistency ===== */
+function grandpaFaceFromStateV5714(){
+  try{
+    if(typeof GRANDPA_FACES_CLEAN!=='undefined' && GRANDPA_FACES_CLEAN.length){
+      const idx=(typeof state.grandpaFaceIndex==='number')?state.grandpaFaceIndex:0;
+      return GRANDPA_FACES_CLEAN[idx % GRANDPA_FACES_CLEAN.length];
+    }
+  }catch(e){}
+  return '👴';
+}
+
+/* Override face helper used by status/battle when available. */
+if(typeof grandpaFaceClean==='function'){
+  grandpaFaceClean=function(){ return grandpaFaceFromStateV5714(); };
+}
+if(typeof getGrandpaFaceForBattleV5712==='function'){
+  getGrandpaFaceForBattleV5712=function(){ return grandpaFaceFromStateV5714(); };
+}

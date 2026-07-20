@@ -1,6 +1,6 @@
-const CACHE_NAME='grandpa-demon-v5713-title-audio-button-fix-20260720';
+const CACHE_NAME='grandpa-demon-v5714-equipment-bgm-qr-face-20260720';
 const APP_SHELL=[
-'./','./index.html','./style.css?v=5.7.13','./app.js?v=5.7.13',
+'./','./index.html','./style.css?v=5.7.14','./app.js?v=5.7.14',
 './manifest.webmanifest?v=5.7.12','./icon-192.png','./icon-512.png'
 ];
 self.addEventListener('install',event=>{

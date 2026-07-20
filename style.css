@@ -613,3 +613,62 @@
   font-size:76px !important;
   line-height:1 !important;
 }
+
+/* ===== v5.7.14 equipment one-column list ===== */
+#inventory,
+.inventory-list,
+#ownedEquipment,
+.owned-equipment-list{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:10px !important;
+  width:100% !important;
+}
+
+#inventory .item,
+#inventory .equipment-item,
+#inventory .inventory-item,
+.inventory-list .item,
+.owned-equipment-list .item{
+  width:100% !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) auto !important;
+  align-items:center !important;
+  gap:12px !important;
+  padding:14px 16px !important;
+  box-sizing:border-box !important;
+}
+
+#inventory .item button,
+#inventory .equipment-item button,
+#inventory .inventory-item button,
+.inventory-list .item button,
+.owned-equipment-list .item button{
+  justify-self:end !important;
+  min-width:86px !important;
+  width:auto !important;
+  margin:0 !important;
+}
+
+#inventory .item .item-main,
+#inventory .equipment-item .item-main,
+#inventory .inventory-item .item-main{
+  min-width:0 !important;
+}
+
+.qr-skill-detail-v5714{
+  display:block !important;
+}
+.qr-skill-head-v5714{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+}
+.qr-skill-desc-v5714{
+  margin-top:8px;
+  font-size:13px;
+  line-height:1.5;
+  opacity:.72;
+  text-align:left;
+}
