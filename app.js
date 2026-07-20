@@ -421,3 +421,170 @@ setTimeout(()=>{
     if(active && active.id==='equip')renderGrandpaStatusClean();
   }
 },0);
+
+
+/* ===== BUILD 5.7.2 FINAL FIXES ===== */
+
+/* ---------- Remove status skill button permanently ---------- */
+function removeStatusSkillButtonV572(){
+  const btn=document.querySelector('#learnedSkillsBtn');
+  if(btn)btn.remove();
+}
+
+/* ---------- Rebuild status card without skill button ---------- */
+function renderGrandpaStatusClean(){
+  const hero=document.querySelector('.hero');
+  if(!hero)return;
+  hero.style.display='';
+  hero.className='hero card grandpa-status-card-v571';
+
+  hero.innerHTML=`
+    <div class="grandpa-left-v571">
+      <div class="grandpa-name-v571" id="playerNameDisplay">${state.playerName||'じいさん'}</div>
+      <div class="grandpa-face-v571">${grandpaFaceV571()}</div>
+    </div>
+    <div class="grandpa-right-v571">
+      <div class="grandpa-stat-line-v571"><span>HP</span><b id="hpStat"></b></div>
+      <div class="grandpa-stat-line-v571"><span>攻撃</span><b id="atkStat"></b></div>
+      <div class="grandpa-stat-line-v571"><span>防御</span><b id="defStat"></b></div>
+      <div class="grandpa-stat-line-v571"><span>速度</span><b id="spdStat"></b></div>
+      <div class="grandpa-stat-line-v571"><span>会心</span><b id="critStat"></b></div>
+      <div class="grandpa-stat-line-v571"><span>回避</span><b id="evaStat"></b></div>
+      <div class="grandpa-stat-line-v571"><span>HP吸収</span><b id="lifestealStat"></b></div>
+    </div>
+    <div class="grandpa-actions-v572">
+      <button id="statusDetailBtn">ステータス詳細</button>
+      <button id="statusHelpBtn">ヘルプ</button>
+    </div>`;
+
+  const s=stats();
+  safeText('#hpStat',s.hp);
+  safeText('#atkStat',s.atk);
+  safeText('#defStat',s.def);
+  safeText('#spdStat',s.spd);
+  safeText('#critStat',s.crit+'%');
+  safeText('#evaStat',s.eva+'%');
+  safeText('#lifestealStat',Math.round((s.lifesteal||0)*100)+'%');
+
+  if(typeof bindStatusButtonsV570==='function')bindStatusButtonsV570();
+}
+
+/* ---------- Title options works reliably ---------- */
+function closeTitleOptionsV572(){
+  const title=document.querySelector('#titleScreen');
+  const options=document.querySelector('#options');
+  if(options){
+    options.classList.remove('active');
+    options.style.display='none';
+  }
+  if(title){
+    title.classList.remove('hidden');
+    title.style.display='';
+  }
+}
+
+function openTitleOptionsV571(){
+  const title=document.querySelector('#titleScreen');
+  const options=document.querySelector('#options');
+  if(!options)return;
+
+  if(title){
+    title.classList.add('hidden');
+    title.style.display='none';
+  }
+
+  options.classList.add('active');
+  options.style.display='block';
+
+  if(typeof bindAudioOptionsV570==='function')bindAudioOptionsV570();
+  if(typeof applyAudioVolumesV570==='function')applyAudioVolumesV570();
+
+  let close=document.querySelector('#closeTitleOptionsV571');
+  if(!close){
+    close=document.createElement('button');
+    close.id='closeTitleOptionsV571';
+    close.className='primary title-main-btn-v572 close-title-options-v572';
+    close.textContent='閉じる';
+    options.appendChild(close);
+  }
+  close.onclick=closeTitleOptionsV572;
+}
+
+/* Bind after DOM is ready and overwrite any broken handler. */
+setTimeout(()=>{
+  const btn=document.querySelector('#titleOptionsBtnV571');
+  if(btn){
+    btn.className='primary title-main-btn-v572';
+    btn.onclick=(e)=>{
+      try{e.preventDefault()}catch(_){}
+      openTitleOptionsV571();
+    };
+  }
+},0);
+
+/* ---------- Battle grandpa: exact same face as status, no equipment ---------- */
+function forceBattleFaceV572(){
+  const el=document.querySelector('#playerAvatar');
+  if(!el)return;
+  el.className='battle-avatar-v572';
+  el.innerHTML=`<span class="battle-grandpa-face-v572">${grandpaFaceV571()}</span>`;
+}
+
+/* Hook all known battle render/update paths. */
+if(typeof renderBattle==='function'){
+  const baseRenderBattleV572=renderBattle;
+  renderBattle=function(){
+    const r=baseRenderBattleV572.apply(this,arguments);
+    forceBattleFaceV572();
+    return r;
+  };
+}
+if(typeof startBattle==='function'){
+  const baseStartBattleV572=startBattle;
+  startBattle=function(){
+    const r=baseStartBattleV572.apply(this,arguments);
+    setTimeout(forceBattleFaceV572,0);
+    return r;
+  };
+}
+
+/* Mutation observer ensures legacy code cannot reinsert equipment emojis. */
+const battleAvatarObserverV572=new MutationObserver(()=>{
+  const el=document.querySelector('#playerAvatar');
+  if(!el)return;
+  const desired=grandpaFaceV571();
+  if(el.textContent.trim()!==desired || el.querySelectorAll('*').length!==1){
+    el.innerHTML=`<span class="battle-grandpa-face-v572">${desired}</span>`;
+  }
+});
+setTimeout(()=>{
+  const el=document.querySelector('#playerAvatar');
+  if(el){
+    battleAvatarObserverV572.observe(el,{childList:true,subtree:true,characterData:true});
+    forceBattleFaceV572();
+  }
+},0);
+
+/* ---------- Remove current equipment window if legacy renderer recreates it ---------- */
+function removeCurrentEquipmentWindowV572(){
+  document.querySelectorAll('h2').forEach(h=>{
+    if((h.textContent||'').trim()==='現在の装備'){
+      const card=h.closest('section,.card,div');
+      if(card && card!==document.body)card.remove();
+    }
+  });
+}
+if(typeof renderEquip==='function'){
+  const baseRenderEquipV572=renderEquip;
+  renderEquip=function(){
+    const r=baseRenderEquipV572.apply(this,arguments);
+    removeCurrentEquipmentWindowV572();
+    removeStatusSkillButtonV572();
+    return r;
+  };
+}
+
+setTimeout(()=>{
+  removeCurrentEquipmentWindowV572();
+  removeStatusSkillButtonV572();
+},0);

@@ -215,3 +215,39 @@
   .grandpa-stat-line-v571{font-size:12px}
   .grandpa-stat-line-v571 b{font-size:14px}
 }
+
+
+/* ===== BUILD 5.7.2 ===== */
+.grandpa-actions-v572{
+  grid-area:actions;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.grandpa-actions-v572 button{
+  min-height:44px;
+  font-size:14px;
+}
+.title-main-btn-v572{
+  width:100%;
+  min-height:72px;
+  margin-top:16px;
+  font-size:22px;
+  font-weight:800;
+  border-radius:18px;
+}
+.close-title-options-v572{
+  margin-top:18px;
+}
+.battle-avatar-v572{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:90px;
+  min-height:90px;
+}
+.battle-grandpa-face-v572{
+  font-size:76px;
+  line-height:1;
+  display:inline-block;
+}
