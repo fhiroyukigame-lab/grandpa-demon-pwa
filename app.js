@@ -275,7 +275,7 @@ setTimeout(initCleanBuild,0);
 const AUDIO_KEY_CLEAN='grandpaDemonAudioSettings';
 const GRANDPA_FACES_CLEAN=['👴','🧓','👨‍🦳','👨‍🦲'];
 
-let audioSettingsClean={bgm:0.70,se:0.80};
+let audioSettingsClean={bgm:0.70,se:1.00};
 try{
   const saved=JSON.parse(localStorage.getItem(AUDIO_KEY_CLEAN)||'null');
   if(saved){
@@ -335,28 +335,9 @@ function bindAudioOptionsClean(){
   }
 }
 
-function playGeneralButtonSEClean(){
-  try{
-    if(!buttonSe)return;
-    buttonSe.pause();
-    buttonSe.currentTime=0;
-    buttonSe.playbackRate=1.08;
-    buttonSe.volume=audioSettingsClean.se;
-    const p=buttonSe.play();
-    if(p&&p.catch)p.catch(()=>{});
-  }catch(e){}
-}
+function playGeneralButtonSEClean(){try{if(!buttonSe)return;buttonSe.pause();buttonSe.currentTime=0;buttonSe.playbackRate=1.10;buttonSe.volume=1.0;const p=buttonSe.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}}
 
-function playCastleButtonSEClean(){
-  try{
-    if(!castleButtonSeClean)return;
-    castleButtonSeClean.pause();
-    castleButtonSeClean.currentTime=0;
-    castleButtonSeClean.volume=audioSettingsClean.se;
-    const p=castleButtonSeClean.play();
-    if(p&&p.catch)p.catch(()=>{});
-  }catch(e){}
-}
+function playCastleButtonSEClean(){try{if(!castleButtonSeClean)return;castleButtonSeClean.pause();castleButtonSeClean.currentTime=0;castleButtonSeClean.volume=1.0;const p=castleButtonSeClean.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}}
 
 function renderGrandpaStatusClean(){
   const hero=document.querySelector('.hero');
@@ -482,17 +463,7 @@ function switchTab(tab,btn){
   else apply();
 }
 
-function bindTabsClean(){
-  document.querySelectorAll('.tab').forEach(b=>{
-    b.onclick=(ev)=>{
-      if(b.dataset.tab==='battle'){
-        try{ev.stopPropagation()}catch(e){}
-        playCastleButtonSEClean();
-      }
-      switchTab(b.dataset.tab,b);
-    };
-  });
-}
+function bindTabsClean(){document.querySelectorAll('.tab').forEach(b=>{if(b.dataset.tab==='battle'){b.onpointerdown=()=>playCastleButtonSEClean();b.ontouchstart=()=>playCastleButtonSEClean();}b.onclick=()=>switchTab(b.dataset.tab,b);});}
 
 function bindTitleOptionsClean(){
   const open=document.querySelector('#titleOptionsBtn');
@@ -501,14 +472,7 @@ function bindTitleOptionsClean(){
   if(close)close.onclick=closeOptionsClean;
 }
 
-function bindButtonSEClean(){
-  document.addEventListener('pointerdown',ev=>{
-    const btn=ev.target.closest&&ev.target.closest('button');
-    if(!btn||btn.disabled)return;
-    if(btn.classList.contains('tab')&&btn.dataset.tab==='battle')return;
-    playGeneralButtonSEClean();
-  },{passive:true});
-}
+function bindButtonSEClean(){let last=0;const fire=(ev)=>{const now=Date.now();if(now-last<90)return;const btn=ev.target.closest&&ev.target.closest('button');if(!btn||btn.disabled)return;if(btn.classList.contains('tab')&&btn.dataset.tab==='battle')return;last=now;playGeneralButtonSEClean();};document.addEventListener('pointerdown',fire,{capture:true,passive:true});document.addEventListener('touchstart',fire,{capture:true,passive:true});}
 
 function hookBattleClean(){
   if(typeof renderBattle==='function'){
@@ -542,6 +506,7 @@ function initClean573(){
   applyAudioVolumesClean();
   bindAudioOptionsClean();
   bindTitleOptionsClean();
+  bindQrUiClean();
   bindTabsClean();
   bindButtonSEClean();
   hookBattleClean();
@@ -555,3 +520,17 @@ function initClean573(){
   }
 }
 setTimeout(initClean573,0);
+
+/* QR CHARACTER GENERATION 5.7.4 */
+let qrStreamClean=null,qrScanTimerClean=null,pendingQrCharacterClean=null;
+function hashStringClean(str){let h=2166136261>>>0;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function seededValueClean(seed,salt,min,max){let x=(seed^Math.imul(salt,2654435761))>>>0;x^=x>>>16;x=Math.imul(x,2246822507);x^=x>>>13;x=Math.imul(x,3266489909);x^=x>>>16;return min+(x%(max-min+1));}
+function availableSkillNamesClean(){if(typeof SKILLS==='undefined')return[];if(Array.isArray(SKILLS))return SKILLS.map(x=>x&&x.name).filter(Boolean);return Object.keys(SKILLS);}
+function qrCharacterFromTextClean(text){const seed=hashStringClean(text),names=(typeof GRANDPA_NAMES!=='undefined'&&GRANDPA_NAMES.length?GRANDPA_NAMES:['ゲンゾウ','トラキチ','タツノスケ','ゴンゾウ']),skills=availableSkillNamesClean();return{qrHash:String(seed),playerName:names[seed%names.length],faceIndex:seededValueClean(seed,23,0,49),grandpaFaceIndex:seededValueClean(seed,29,0,3),baseStats:{hp:seededValueClean(seed,31,90,115),atk:seededValueClean(seed,37,8,13),def:seededValueClean(seed,41,4,8),spd:seededValueClean(seed,43,45,55),crit:seededValueClean(seed,47,2,7),eva:seededValueClean(seed,53,1,5)},initialSkill:skills.length?skills[seededValueClean(seed,17,0,skills.length-1)]:null};}
+function showQrCharacterResultClean(c){const b=document.querySelector('#qrResultBox');if(!b)return;pendingQrCharacterClean=c;b.classList.remove('hidden');b.innerHTML=`<div class="qr-result-title">QRじいさん候補</div><div class="qr-result-name">${c.playerName}</div><div class="qr-result-stats">HP ${c.baseStats.hp} / 攻撃 ${c.baseStats.atk} / 防御 ${c.baseStats.def}<br>速度 ${c.baseStats.spd} / 会心 ${c.baseStats.crit}% / 回避 ${c.baseStats.eva}%</div><div class="qr-result-skill">初期スキル：${c.initialSkill||'なし'}</div><button id="startQrGameBtn" class="primary title-main-btn">このじいさんでニューゲーム</button>`;document.querySelector('#startQrGameBtn').onclick=startQrNewGameClean;}
+function applyQrCharacterToStateClean(c){state=migrate(null);state.playerName=c.playerName;state.grandpaFaceIndex=c.grandpaFaceIndex;state.faceId=c.faceIndex;state.qrHash=c.qrHash;state.qrBaseStats=c.baseStats;state.skills={};if(c.initialSkill)state.skills[c.initialSkill]=1;}
+function startQrNewGameClean(){if(!pendingQrCharacterClean)return;if(localStorage.getItem('grandpaDemonSave')&&!confirm('現在のセーブデータを消してQRじいさんでニューゲームを始めますか？'))return;localStorage.removeItem('grandpaDemonSave');applyQrCharacterToStateClean(pendingQrCharacterClean);save();enterGame();const b=document.querySelector('.tab[data-tab="equip"]');if(b)switchTab('equip',b);}
+function stopQrScannerClean(){if(qrScanTimerClean){clearInterval(qrScanTimerClean);qrScanTimerClean=null;}if(qrStreamClean){qrStreamClean.getTracks().forEach(t=>t.stop());qrStreamClean=null;}const m=document.querySelector('#qrScannerModal');if(m)m.classList.add('hidden');}
+async function startQrScannerClean(){const m=document.querySelector('#qrScannerModal'),v=document.querySelector('#qrVideo'),s=document.querySelector('#qrScanStatus');if(!m||!v)return;m.classList.remove('hidden');if(s)s.textContent='カメラを起動しています...';try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('カメラAPIが利用できません');if(typeof BarcodeDetector==='undefined')throw new Error('このブラウザはQRコード自動認識に対応していません');const d=new BarcodeDetector({formats:['qr_code']});qrStreamClean=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});v.srcObject=qrStreamClean;await v.play();if(s)s.textContent='QRコードを画面中央に映してください';qrScanTimerClean=setInterval(async()=>{try{if(v.readyState<2)return;const codes=await d.detect(v);if(codes&&codes.length&&codes[0].rawValue){stopQrScannerClean();showQrCharacterResultClean(qrCharacterFromTextClean(codes[0].rawValue));}}catch(e){}},250);}catch(e){if(s)s.textContent=e.message||'QRコードを読み取れませんでした';}}
+function bindQrUiClean(){const o=document.querySelector('#qrGenerateBtn'),c=document.querySelector('#qrScannerClose');if(o)o.onclick=startQrScannerClean;if(c)c.onclick=stopQrScannerClean;}
+const baseStatsFunction574=stats;stats=function(){const s=baseStatsFunction574(),q=state&&state.qrBaseStats;if(!q)return s;s.hp+=(q.hp-100);s.atk+=(q.atk-10);s.def+=(q.def-5);s.spd+=(q.spd-50);s.crit+=(q.crit-5);s.eva+=(q.eva-3);return s;};
