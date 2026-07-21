@@ -1,6 +1,6 @@
-const CACHE_NAME='grandpa-demon-v5719-skill-castle-speed-20260721';
+const CACHE_NAME='grandpa-demon-v5720-qr-status-sync-20260721';
 const APP_SHELL=[
-'./','./index.html','./style.css?v=5.7.19','./app.js?v=5.7.19',
+'./','./index.html','./style.css?v=5.7.20','./app.js?v=5.7.20',
 './manifest.webmanifest?v=5.7.12','./icon-192.png','./icon-512.png'
 ];
 self.addEventListener('install',event=>{

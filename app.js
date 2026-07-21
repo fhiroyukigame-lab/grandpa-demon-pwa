@@ -10146,9 +10146,19 @@ function gear(id){return state.gears.find(g=>g.id===id)}
 function addBonus(dst,src){Object.entries(src||{}).forEach(([k,v])=>dst[k]=(dst[k]||0)+v)}
 function statSummary(g){const all={...g.base};Object.entries(g.bonus||{}).forEach(([k,v])=>all[k]=(all[k]||0)+v);return [['HP','hp'],['攻','atk'],['防','def'],['速','spd'],['会心','crit'],['回避','eva']].filter(x=>all[x[1]]).map(x=>x[0]+(all[x[1]]>0?'+':'')+all[x[1]]).join(' / ')||'能力なし'}
 function stats(){
-  const q=(state&&state.qrBaseStats)||null;
+  const p=(typeof getQrProfileClean5715==='function')?getQrProfileClean5715():null;
+  const q=p&&p.baseStats ? p.baseStats : ((state&&state.qrBaseStats)||null);
+
   const s=q
-    ? {hp:q.hp,atk:q.atk,def:q.def,spd:q.spd,crit:q.crit,eva:q.eva,lifesteal:0}
+    ? {
+        hp:Number(q.hp)||0,
+        atk:Number(q.atk)||0,
+        def:Number(q.def)||0,
+        spd:Number(q.spd)||0,
+        crit:Number(q.crit)||0,
+        eva:Number(q.eva)||0,
+        lifesteal:0
+      }
     : {hp:128,atk:12,def:5,spd:50,crit:5,eva:3,lifesteal:0};
 
   Object.values(state.equipped||{}).map(gear).forEach(g=>{
@@ -10672,28 +10682,68 @@ function qrCharacterFromTextClean(text){const seed=hashStringClean(text),names=(
 function applyQrCharacterToStateClean(c){
   state=migrate(null);
 
-  state.playerName=c.playerName;
-  state.grandpaFaceIndex=Number(c.grandpaFaceIndex)||0;
-  state.faceId=c.faceIndex;
-  state.qrHash=c.qrHash;
-  state.qrBaseStats={...c.baseStats};
+  state.qrProfile={
+    playerName:c.playerName,
+    grandpaFaceIndex:Number(c.grandpaFaceIndex)||0,
+    faceId:c.faceIndex,
+    qrHash:c.qrHash,
+    baseStats:{...c.baseStats},
+    initialSkill:c.initialSkill||null
+  };
+
+  state.playerName=state.qrProfile.playerName;
+  state.grandpaFaceIndex=state.qrProfile.grandpaFaceIndex;
+  state.faceId=state.qrProfile.faceId;
+  state.qrHash=state.qrProfile.qrHash;
+  state.qrBaseStats={...state.qrProfile.baseStats};
 
   state.skills={};
   state.equippedSkills=[];
-
-  if(c.initialSkill){
-    state.skills[c.initialSkill]=1;
+  if(state.qrProfile.initialSkill){
+    state.skills[state.qrProfile.initialSkill]=1;
   }
 
   save();
 }
 function startQrNewGameClean(){
-if(!pendingQrCharacterClean)return;
-if(localStorage.getItem('grandpaDemonSave')&&!confirm('現在のセーブデータを消してQRじいさんでニューゲームを始めますか？'))return;
-localStorage.removeItem('grandpaDemonSave');applyQrCharacterToStateClean(pendingQrCharacterClean);save();
-const qrSe=document.querySelector('#qrStartSe');let moved=false;
-const moveToGame=()=>{if(moved)return;moved=true;enterGame();const b=document.querySelector('.tab[data-tab="equip"]');if(b)switchTab('equip',b);};
-if(qrSe){try{qrSe.pause();qrSe.currentTime=0;qrSe.volume=1;qrSe.onended=moveToGame;const p=qrSe.play();if(p&&p.catch)p.catch(()=>moveToGame());setTimeout(moveToGame,3000);}catch(e){moveToGame();}}else moveToGame();
+  if(!pendingQrCharacterClean)return;
+  if(localStorage.getItem('grandpaDemonSave')&&!confirm('現在のセーブデータを消してQRじいさんでニューゲームを始めますか？'))return;
+
+  localStorage.removeItem('grandpaDemonSave');
+  applyQrCharacterToStateClean(pendingQrCharacterClean);
+  save();
+
+  const qrSe=document.querySelector('#qrStartSe');
+  let moved=false;
+
+  const moveToGame=()=>{
+    if(moved)return;
+    moved=true;
+    enterGame();
+    const b=document.querySelector('.tab[data-tab="equip"]');
+    if(b)switchTab('equip',b);
+    setTimeout(()=>{
+      renderGrandpaStatusClean();
+      renderOwnedEquipmentClean5715();
+      renderOwnedSkillsV570();
+    },0);
+  };
+
+  if(qrSe){
+    try{
+      qrSe.pause();
+      qrSe.currentTime=0;
+      qrSe.volume=1;
+      qrSe.onended=moveToGame;
+      const p=qrSe.play();
+      if(p&&p.catch)p.catch(()=>moveToGame());
+      setTimeout(moveToGame,3000);
+    }catch(e){
+      moveToGame();
+    }
+  }else{
+    moveToGame();
+  }
 }
 function stopQrScannerClean(){
   if(qrScanTimerClean){cancelAnimationFrame(qrScanTimerClean);qrScanTimerClean=null;}
@@ -10844,10 +10894,17 @@ t.addEventListener('pointerdown',f,{passive:true});t.addEventListener('touchstar
 
 /* ---------- QR profile is the canonical source ---------- */
 function getQrProfileClean5715(){
+  if(state && state.qrProfile){
+    return {
+      name:state.qrProfile.playerName||'じいさん',
+      faceIndex:Number(state.qrProfile.grandpaFaceIndex)||0,
+      baseStats:state.qrProfile.baseStats||null
+    };
+  }
   return {
-    name: state && state.playerName ? state.playerName : 'じいさん',
-    faceIndex: state && typeof state.grandpaFaceIndex==='number' ? state.grandpaFaceIndex : 0,
-    baseStats: state && state.qrBaseStats ? state.qrBaseStats : null
+    name:state && state.playerName ? state.playerName : 'じいさん',
+    faceIndex:state && typeof state.grandpaFaceIndex==='number' ? state.grandpaFaceIndex : 0,
+    baseStats:state && state.qrBaseStats ? state.qrBaseStats : null
   };
 }
 
@@ -10885,13 +10942,14 @@ function renderGrandpaStatusClean(){
 
   const p=getQrProfileClean5715();
   const s=stats();
+  const face=getGrandpaFaceClean5715();
 
   hero.style.display='';
   hero.className='hero card grandpa-status-card-clean';
   hero.innerHTML=`
     <div class="grandpa-left-clean">
       <div class="grandpa-name-clean" id="playerNameDisplay">${p.name}</div>
-      <div class="grandpa-face-clean">${getGrandpaFaceClean5715()}</div>
+      <div class="grandpa-face-clean">${face}</div>
     </div>
     <div class="grandpa-right-clean">
       <div class="grandpa-stat-clean"><span>HP</span><b>${s.hp}</b></div>
